@@ -1,0 +1,9 @@
+[project]
+name = "aios-workers"
+version = "0.1.0"
+description = "Agent Zero worker runtimes for AIOS MVO"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false

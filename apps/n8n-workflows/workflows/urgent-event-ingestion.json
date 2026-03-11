@@ -1,0 +1,54 @@
+{
+  "name": "AIOS Urgent Event Ingestion",
+  "nodes": [
+    {
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aios/urgent-event"
+      }
+    },
+    {
+      "name": "Validate Tenant",
+      "type": "n8n-nodes-base.function",
+      "parameters": {
+        "functionCode": "const body = items[0].json;\nif (!body.tenantId) { throw new Error('tenantId is required'); }\nreturn items;"
+      }
+    },
+    {
+      "name": "Wake Paperclip",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.PAPERCLIP_EVENT_URL}}",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{$json}}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Tenant": {
+      "main": [
+        [
+          {
+            "node": "Wake Paperclip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

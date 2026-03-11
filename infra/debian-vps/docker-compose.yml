@@ -1,0 +1,72 @@
+services:
+  paperclip-service:
+    image: node:22-alpine
+    working_dir: /workspace
+    command:
+      [
+        "sh",
+        "-c",
+        "npm install -g pnpm && pnpm install && pnpm --filter @linktrend/paperclip-service dev"
+      ]
+    env_file:
+      - ${AIOS_ENV_FILE:-../../.env}
+    ports:
+      - "4000:4000"
+    volumes:
+      - ../../:/workspace
+    depends_on:
+      - n8n
+
+  n8n:
+    image: n8nio/n8n:1.82.1
+    env_file:
+      - ${AIOS_ENV_FILE:-../../.env}
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ../../apps/n8n-workflows/workflows:/workflows:ro
+
+  agent-zero:
+    image: agent0ai/agent-zero:latest
+    profiles: ["upstreams"]
+    ports:
+      - "50001:80"
+    restart: unless-stopped
+
+  paperclip-upstream:
+    image: node:22-alpine
+    profiles: ["upstreams"]
+    working_dir: /vendor/paperclip
+    command:
+      [
+        "sh",
+        "-c",
+        "npm install -g pnpm && pnpm install && pnpm dev:server"
+      ]
+    env_file:
+      - ${AIOS_ENV_FILE:-../../.env}
+    volumes:
+      - ../../vendor/paperclip:/vendor/paperclip
+    ports:
+      - "3100:3100"
+
+  openclaw-gateway:
+    image: node:22-alpine
+    profiles: ["upstreams"]
+    working_dir: /vendor/openclaw
+    command:
+      [
+        "sh",
+        "-c",
+        "npm install -g pnpm && pnpm install && pnpm gateway:watch"
+      ]
+    env_file:
+      - ${AIOS_ENV_FILE:-../../.env}
+    volumes:
+      - ../../vendor/openclaw:/vendor/openclaw
+    ports:
+      - "4141:4141"
+
+volumes:
+  n8n_data:
