@@ -12,11 +12,12 @@ required_paths=(
   "docs/AIOS_MASTER_SPEC.md"
   "infra/debian-vps/docker-compose.yml"
   "infra/mac-mini/README.md"
-  "packages/studio-brain/migrations/0001_init.sql"
-  "apps/paperclip-service/src/index.ts"
-  "apps/n8n-workflows/workflows/hot-cold-migration.json"
-  "agents/managers/ceo/soul.md"
-  "agents/workers/fe-dev/main.py"
+  "packages/linkbrain/migrations/0001_init.sql"
+  "apps/LiNKaios/src/index.ts"
+  "apps/LiNKautowork/workflows/hot-cold-migration.json"
+  "agents/internal/managers/INT-MNG-260311-0001-LISA/soul.md"
+  "agents/internal/workers/INT-EXE-260311-0005-MIKE/soul.md"
+  "agents/internal/workers/INT-EXE-260311-0005-MIKE/main.py"
 )
 
 for path in "${required_paths[@]}"; do

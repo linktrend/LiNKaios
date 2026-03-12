@@ -1,23 +1,28 @@
 services:
-  paperclip-service:
+  LiNKaios:
     image: node:22-alpine
     working_dir: /workspace
     command:
       [
         "sh",
         "-c",
-        "npm install -g pnpm && pnpm install && pnpm --filter @linktrend/paperclip-service dev"
+        "npm install -g pnpm && pnpm install && pnpm --filter @linktrend/LiNKaios dev"
       ]
     env_file:
       - ${AIOS_ENV_FILE:-../../.env}
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-/var/secrets/google/linktrend-gsm.json}
     ports:
       - "4000:4000"
     volumes:
       - ../../:/workspace
+      - ../../agents/internal/managers:/workspace/agents/internal/managers:ro
+      - ../../agents/internal/workers:/workspace/agents/internal/workers:ro
+      - ${GOOGLE_APPLICATION_CREDENTIALS_HOST_PATH:-../../secrets/gcp-sa.json}:${GOOGLE_APPLICATION_CREDENTIALS:-/var/secrets/google/linktrend-gsm.json}:ro
     depends_on:
-      - n8n
+      - LiNKautowork
 
-  n8n:
+  LiNKautowork:
     image: n8nio/n8n:1.82.1
     env_file:
       - ${AIOS_ENV_FILE:-../../.env}
@@ -25,7 +30,7 @@ services:
       - "5678:5678"
     volumes:
       - n8n_data:/home/node/.n8n
-      - ../../apps/n8n-workflows/workflows:/workflows:ro
+      - ../../apps/LiNKautowork/workflows:/workflows:ro
 
   agent-zero:
     image: agent0ai/agent-zero:latest
@@ -37,7 +42,7 @@ services:
   paperclip-upstream:
     image: node:22-alpine
     profiles: ["upstreams"]
-    working_dir: /vendor/paperclip
+    working_dir: /linkbots/paperclip
     command:
       [
         "sh",
@@ -47,14 +52,14 @@ services:
     env_file:
       - ${AIOS_ENV_FILE:-../../.env}
     volumes:
-      - ../../vendor/paperclip:/vendor/paperclip
+      - ../../linkbots/paperclip:/linkbots/paperclip
     ports:
       - "3100:3100"
 
   openclaw-gateway:
     image: node:22-alpine
     profiles: ["upstreams"]
-    working_dir: /vendor/openclaw
+    working_dir: /linkbots/openclaw
     command:
       [
         "sh",
@@ -64,9 +69,26 @@ services:
     env_file:
       - ${AIOS_ENV_FILE:-../../.env}
     volumes:
-      - ../../vendor/openclaw:/vendor/openclaw
+      - ../../linkbots/openclaw:/linkbots/openclaw
     ports:
       - "4141:4141"
+
+  linkboard:
+    image: node:22-alpine
+    profiles: ["upstreams"]
+    working_dir: /linkbots/llm-council
+    command:
+      [
+        "sh",
+        "-c",
+        "npm install -g pnpm && pnpm install && pnpm dev"
+      ]
+    env_file:
+      - ${AIOS_ENV_FILE:-../../.env}
+    volumes:
+      - ../../linkbots/llm-council:/linkbots/llm-council
+    ports:
+      - "3200:3200"
 
 volumes:
   n8n_data:

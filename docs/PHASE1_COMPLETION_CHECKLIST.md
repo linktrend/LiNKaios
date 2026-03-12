@@ -15,7 +15,7 @@
 
 ## Data plane
 
-- [ ] Studio Brain migration applied
+- [ ] LiNKbrain migration applied
 - [ ] `core.tenants` seeded with AIOS internal tenant
 - [ ] RLS active on shared/scratch tables
 - [ ] RPC-only access pattern enforced

@@ -4,6 +4,7 @@
 .env.*
 !.env.example
 !**/.env.example
+secrets/
 *.log
 
 # Python
@@ -17,8 +18,8 @@ node_modules/
 dist/
 build/
 .npmrc
-vendor/
-!vendor/README.md
+linkbots/
+!linkbots/README.md
 
 # Editors/IDE
 .vscode/

@@ -2,7 +2,7 @@
 
 ## Contract Tests
 
-1. Mission payload rejects missing `tenantId`, `runId`, `taskId`, `agentId`.
+1. Mission payload rejects missing `tenantId`, `runId`, `taskId`, `dprId`.
 2. Mission status accepts only `active`, `paused`, `handover_pending`, `archived`.
 3. LiNKskills contract rejects malformed execution fragments.
 

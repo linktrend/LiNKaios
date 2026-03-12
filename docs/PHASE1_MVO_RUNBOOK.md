@@ -15,12 +15,12 @@ pnpm install
 ./scripts/bootstrap-upstreams.sh
 ```
 
-## 3) Studio Brain migration
+## 3) LiNKbrain migration
 
 ```bash
 export DATABASE_URL='postgresql://...'
-./packages/studio-brain/scripts/apply-migrations.sh
-psql "$DATABASE_URL" -f packages/studio-brain/scripts/bootstrap-aios-tenant.sql
+./packages/linkbrain/scripts/apply-migrations.sh
+psql "$DATABASE_URL" -f packages/linkbrain/scripts/bootstrap-aios-tenant.sql
 ```
 
 ## 4) Environment setup
@@ -45,14 +45,14 @@ Extended stack with upstream services:
 
 ## 6) n8n workflows import
 
-- Import files from `apps/n8n-workflows/workflows/`
+- Import files from `apps/LiNKautowork/workflows/`
 - Configure credentials for Supabase, Google Drive, Postmark
 - Enable workflows after credential validation
 
 ## 7) Agent readiness
 
-- Manager personas exist under `agents/managers/*`
-- Worker runtimes initialized with `uv sync` under `agents/workers`
+- Manager personas exist under `agents/internal/managers/*`
+- Worker runtimes initialized with `uv sync` under `agents/internal/workers`
 - Tenant IDs in `IDENTITY.md` match Paperclip mission tenant
 
 ## 8) Operational validation
