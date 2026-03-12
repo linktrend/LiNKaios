@@ -17,4 +17,4 @@ AIOS_ENV_FILE="$ROOT_DIR/.env" docker compose \
   -f infra/debian-vps/docker-compose.yml \
   up -d --build
 
-echo "Core MVO stack is up (paperclip-service + n8n)."
+echo "Core MVO stack is up (LiNKaios + LiNKautowork)."

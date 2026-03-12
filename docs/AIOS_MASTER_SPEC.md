@@ -29,7 +29,7 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 
 ### 5-Layer Cognitive Infrastructure
 
-1. Context: Studio Brain memory (Supabase + pgvector).
+1. Context: LiNKbrain memory (Supabase + pgvector).
 2. Data: Multi-tenant row-isolated data model.
 3. Intelligence: Daily synthesis and strategic council workflows.
 4. Automation: Heartbeat + event-driven trigger loop.
@@ -56,7 +56,7 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 
 ### Phase 2: Full AIOS
 
-1. LLM Council inside production strategic loop.
+1. LiNKboard strategic council inside production strategic loop.
 2. Cloudflare Logic Gateway/VPN hardening extension.
 3. Automated Daily Brief synthesis from run logs.
 4. Venture kill-switch for runaway process and spend protection.
@@ -73,7 +73,24 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 5. Tenant authority source is Paperclip mission metadata.
 6. On task wake, each agent verifies payload tenant vs local identity tenant; mismatch halts execution and logs security exception.
 
-## Studio Brain Data Contract
+## Secret Management Contract
+
+1. Production secret source of truth is Google Secret Manager (GSM).
+2. MVO transition flow allows local `.env` fallback only when GSM retrieval is unavailable.
+3. Secret names follow `LINKTREND_[SERVICE]_[ENV]_[RESOURCE]_[IDENTIFIER]`.
+4. Runtime secret retrieval always targets `versions/latest` to support rotation without code changes.
+5. No Google Project IDs are hard-coded in code; project and credentials are read from environment.
+
+### Initial GSM Secrets for MVO
+
+- `LINKTREND_AIOS_PROD_SUPABASE_SERVICE_ROLE`
+- `LINKTREND_AIOS_PROD_POSTMARK_SERVER_TOKEN`
+- `LINKTREND_AIOS_PROD_OPENROUTER_API_KEY`
+- `LINKTREND_AIOS_PROD_ANTHROPIC_API_KEY`
+- `LINKTREND_AIOS_PROD_N8N_WEBHOOK_SIGNING_KEY`
+- `LINKTREND_AIOS_PROD_GDRIVE_SERVICE_ACCOUNT_JSON`
+
+## LiNKbrain Data Contract
 
 ### Schemas
 
@@ -120,14 +137,14 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 ## Workflow and Status Contract
 
 - Allowed statuses: `active`, `paused`, `handover_pending`, `archived`.
-- Required run metadata: `run_id`, `task_id`, `agent_id`, `tenant_id`.
+- Required run metadata: `run_id`, `task_id`, `dpr_id`, `tenant_id`.
 - Supabase remains system of record for mission state, policy/proposal state, lessons, and run-level audit logs.
 
 ## MVO Workstream Sequence
 
 1. Monorepo and runtime foundation.
 2. Cross-agent task contract scaffolding.
-3. Studio Brain schema + RPC layer.
+3. LiNKbrain schema + RPC layer.
 4. Local/global memory implementation.
 5. Audit telemetry flow.
 6. Storage migration workflows.
@@ -147,5 +164,5 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 ## Defaults and Assumptions
 
 - Service-role style backend credential is used in MVO, constrained by RPC-only access pattern and tenant-context enforcement.
-- Host `.env` files are acceptable for MVO. Vault adoption is Phase 2.
+- GSM is authoritative in production; `.env` fallback is MVO-only transitional behavior.
 - Mac mini hosts embedding service for entire stack during MVO.

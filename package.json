@@ -13,5 +13,10 @@
   "devDependencies": {
     "turbo": "^2.5.0",
     "typescript": "^5.8.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tootallnate/once": "^3.0.1"
+    }
   }
 }

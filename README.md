@@ -4,6 +4,7 @@ This repository hosts the AIOS platform implementation.
 
 Canonical spec: `docs/AIOS_MASTER_SPEC.md`
 MVO runbook: `docs/PHASE1_MVO_RUNBOOK.md`
+Secret management: `docs/SECRET_MANAGEMENT.md`
 
 ## Stack baseline
 
@@ -17,7 +18,7 @@ MVO runbook: `docs/PHASE1_MVO_RUNBOOK.md`
 
 - `docs/`: cross-thread product and engineering specs
 - `infra/`: Debian VPS and Mac mini operational configs
-- `packages/`: shared platform packages (Studio Brain SQL, interfaces, shared logic)
+- `packages/`: shared platform packages (LiNKbrain SQL, linkskills, linklogic)
 - `apps/`: service applications (Paperclip adapter, n8n workflow assets)
 - `agents/`: manager and worker personas/runtime skeletons
 
