@@ -14,6 +14,16 @@ Canonical internal tenant UUID for MVO fixtures/examples:
 - `GET /briefings/chairman/operational-pulse?tenantId=<uuid>&runId=<optional>`
 - `GET /briefings/chairman/quality-gate?tenantId=<uuid>&runId=<optional>`
 - `GET /evidence/mvo/predeploy?tenantId=<uuid>&runId=<optional>`
+- `GET /persona/readiness?tenantId=<uuid>`
+- `GET /persona/entities?tenantId=<uuid>&entityKind=<optional>`
+- `GET /persona/revisions?tenantId=<uuid>&entityId=<optional>`
+- `GET /persona/approvals/queue?tenantId=<uuid>&status=<optional(review|approved)>`
+- `GET /persona/compile/preview?tenantId=<uuid>&dprId=<id>`
+- `GET /persona/compile/diff?tenantId=<uuid>&dprId=<id>`
+- `GET /persona/bundles/:dprId?tenantId=<uuid>`
+- `GET /persona/sync/bundle?tenantId=<uuid>&dprId=<id>&expectedRevision=<optional-hash>`
+- `GET /persona/migration/parity?tenantId=<uuid>`
+- `GET /persona/migration/evidence?tenantId=<uuid>`
 - `POST /missions/start`
 - `POST /tasks/handoff`
 - `POST /tasks/accept`
@@ -22,6 +32,15 @@ Canonical internal tenant UUID for MVO fixtures/examples:
 - `POST /approvals/request`
 - `POST /approvals/decide`
 - `POST /events/urgent`
+- `POST /persona/entities`
+- `POST /persona/revisions`
+- `POST /persona/revisions/publish`
+- `POST /persona/revisions/rollback`
+- `POST /persona/sync/ack`
+- `POST /persona/migration/import-local`
+- `POST /persona/migration/compile-all`
+- `POST /policies/evaluate`
+- `POST /policies/killswitch`
 
 ## Event Bus Contract
 
@@ -34,6 +53,7 @@ Canonical internal tenant UUID for MVO fixtures/examples:
 - Slack-only operations for MVO (Telegram disabled).
 - Approval events route to approvals webhook first, fallback to operations webhook.
 - Non-approval operational events route to operations webhook.
+- Persona lifecycle actions emit canonical `aios.*` progress/security/approval events.
 - Ritual support surfaces:
   - 08:00 Asia/Taipei strategic window.
   - 10:45 Asia/Taipei operational pulse window.
