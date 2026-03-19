@@ -1,0 +1,75 @@
+{
+  "name": "AIOS Security Exception Response",
+  "nodes": [
+    {
+      "name": "Security Exception Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aios/security-exception"
+      }
+    },
+    {
+      "name": "Validate Exception Payload",
+      "type": "n8n-nodes-base.function",
+      "parameters": {
+        "functionCode": "const body = items[0].json;\nif (!body.tenantId || !body.runId || !body.taskId) { throw new Error('tenantId, runId, taskId required'); }\nreturn items;"
+      }
+    },
+    {
+      "name": "Open Incident",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.SUPABASE_INCIDENT_RPC}}",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "name": "Notify Leadership",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.SLACK_OPERATIONS_WEBHOOK_URL}}",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ { text: '[Security Exception] Mission halted. run=' + $json.runId + ' task=' + $json.taskId } }}"
+      }
+    }
+  ],
+  "connections": {
+    "Security Exception Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Exception Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Exception Payload": {
+      "main": [
+        [
+          {
+            "node": "Open Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open Incident": {
+      "main": [
+        [
+          {
+            "node": "Notify Leadership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

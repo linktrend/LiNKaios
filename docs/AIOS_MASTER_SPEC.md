@@ -1,12 +1,14 @@
 # AIOS Master Spec
 
-- Spec Version: 1.0.0
-- Last Updated: 2026-03-11
+- Spec Version: 1.2.0
+- Last Updated: 2026-03-19
 - Decision Owners: Chairman, Studio CEO, Studio CTO
 - Canonicality: This file is the source of truth for all AIOS development threads.
 
 ## Change Log
 
+- 1.2.0: LiNKaios pre-deployment contract lock for JetStream publish acknowledgements, lifecycle completion (`accepted`/`completed`), evidence harness export, and 08:00/10:45/14:45 briefing surfaces.
+- 1.1.0: MVO execution lock for NATS transport, Slack-only operations, 08:00 Chairman final approval flow, and full MVO roster (MARK/ALEX added).
 - 1.0.0: Initial integrated implementation contract for MVO and Phase 2.
 
 ## Governance and Update Protocol
@@ -25,7 +27,7 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 
 1. Orchestration: Paperclip control plane for mission scheduling, hierarchy, and heartbeat management.
 2. Management: OpenClaw manager personas (CEO, CTO, PO, Team Lead) for planning, governance, and delegation.
-3. Execution: Agent Zero worker personas (FE, BE, QA) for terminal-native implementation and testing.
+3. Execution: Agent Zero worker personas (FE, BE, UI/UX, QA) for terminal-native implementation and testing.
 
 ### 5-Layer Cognitive Infrastructure
 
@@ -44,12 +46,13 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
   - Mac mini execution node for local worker model serving and execution runtimes.
 - Persona baseline:
   - Managers: CEO, CTO, PO, Team Lead.
-  - Workers: FE Developer, BE Developer, QA Engineer.
+  - Workers: FE Developer, BE Developer, UI/UX Designer, QA Engineer.
 - Core integrations:
-  - Paperclip, OpenClaw, Agent Zero, Supabase, n8n, Postmark, Google Drive, Ollama.
+  - Paperclip, OpenClaw, Agent Zero, NATS, Supabase, n8n, Postmark, Google Drive, Ollama.
 - Operational cadence:
   - 60-minute heartbeat for baseline triage.
   - Event-driven interrupts via Slack + webhook/email.
+  - Daily 08:00 (Asia/Taipei) Chairman approval briefing for protected decisions.
 - Budget policy:
   - Operating target: USD 500/month.
   - Hard cap: USD 1000 for initial launch phase.
@@ -72,6 +75,8 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 4. Every row in every table includes `tenant_id`.
 5. Tenant authority source is Paperclip mission metadata.
 6. On task wake, each agent verifies payload tenant vs local identity tenant; mismatch halts execution and logs security exception.
+7. Telegram is disabled for MVO operations; Slack is the only human-visible channel.
+8. Every cross-agent handoff must include `tenant_id`, `run_id`, `task_id`, and `dpr_id`.
 
 ## Secret Management Contract
 
@@ -118,7 +123,7 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 
 - Promotion source: `scratch_memory.entries`.
 - Auto-promotion threshold: confidence `>= 0.85`.
-- Every auto-promotion marked `requires_review` for daily CEO/CTO validation.
+- Every auto-promotion marked `requires_review` for CEO/CTO recommendation and Chairman final approval in the 08:00 briefing window (until delegation policy changes).
 
 ## Hot/Cold Storage Lifecycle
 
@@ -132,7 +137,55 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
    - Verify checksum.
    - Delete hot object.
    - Persist metadata pointer (Drive file ID, checksum, source path).
-5. Restore mode: manual-only by CTO or CEO approval.
+5. Restore mode:
+   - CEO/CTO recommendation required.
+   - Chairman final approval required in daily 08:00 (Asia/Taipei) briefing until delegation policy is updated.
+
+## Inter-Agent Transport Contract
+
+1. MVO message bus is NATS with JetStream-style reliable processing.
+2. Canonical subject taxonomy (Paperclip-owned):
+   - `aios.task.created`
+   - `aios.task.assigned`
+   - `aios.task.accepted`
+   - `aios.task.progress`
+   - `aios.task.handoff`
+   - `aios.task.completed`
+   - `aios.task.failed`
+   - `aios.approval.requested`
+   - `aios.approval.decided`
+   - `aios.security.exception`
+3. Canonical envelope fields:
+   - `event_id`, `event_type`, `occurred_at`, `schema_version`
+   - `tenant_id`, `mission_id`, `run_id`, `task_id`
+   - `from_dpr_id`, `to_dpr_id`
+   - `correlation_id`, `idempotency_key`
+   - `payload`
+4. Reliability defaults:
+   - At-least-once delivery.
+   - Consumer acknowledgement required.
+   - Idempotent processing keyed by `idempotency_key`.
+   - Bounded retry with dead-letter stream handling.
+5. LiNKaios health must expose transport metadata:
+   - stream name and readiness
+   - publish ack mode
+   - dead-letter hook status
+   - last publish ack/error
+
+## Communication Contract
+
+1. Slack is the primary and only enabled operations channel for MVO.
+2. Telegram remains disabled for MVO.
+3. All protected approvals (lesson promotion and archive restore) follow:
+   - CEO/CTO recommendation,
+   - Chairman final decision in Slack at 08:00 Asia/Taipei,
+   - Authoritative decision persisted to LiNKbrain.
+
+## Automation Source-of-Truth Contract
+
+1. LiNKautowork repository is authoritative for automation templates and activation lifecycle.
+2. AIOS workflow assets are mirror artifacts only.
+3. Productionized schedules/credentials are managed in LiNKautowork runtime, not in AIOS code paths.
 
 ## Workflow and Status Contract
 

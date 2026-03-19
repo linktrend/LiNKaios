@@ -8,7 +8,8 @@
     "dev": "turbo run dev --parallel",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "check": "turbo run check"
+    "check": "turbo run check",
+    "mvo:predeploy": "./scripts/mvo-predeploy-acceptance.sh"
   },
   "devDependencies": {
     "turbo": "^2.5.0",

@@ -7,8 +7,9 @@ LiNKtrend stores operational credentials in Google Secret Manager (GSM) so AIOS 
 ## Source of Truth Policy
 
 - Production: GSM is authoritative for all sensitive credentials.
-- MVO transition mode: services attempt local `.env` fallback first, then retrieve from GSM.
-- Local `.env` remains a bootstrap-only mechanism and must never be committed.
+- Dev and production both use GSM as authoritative secret source.
+- Local `.env` files hold only non-secret configuration and `*_SECRET_NAME` references.
+- Local `.env` remains bootstrap-only and must never be committed.
 
 ## Secret Naming Convention
 
@@ -47,9 +48,9 @@ Every secret must include labels for filtering, ownership, and rotation workflow
 
 Applications use the `GSMSecretProvider` from `packages/linklogic`:
 
-1. Check local `.env` fallback variable first (MVO compatibility).
-2. If missing, resolve from `projects/$GOOGLE_CLOUD_PROJECT/secrets/$SECRET_NAME/versions/latest`.
-3. Fail fast if neither local fallback nor GSM value is available.
+1. Resolve secret payload from `projects/$GOOGLE_CLOUD_PROJECT/secrets/$SECRET_NAME/versions/latest`.
+2. Fail fast at startup if required secret names are missing.
+3. Fail fast if GSM read returns empty or inaccessible payload for required secrets.
 
 ## Required Environment Variables
 
@@ -73,4 +74,4 @@ Create these secrets in GSM before production rollout:
 
 - Keep service account key files outside git (`secrets/` path is local-only).
 - Use labels to support future automated budget and secret lifecycle audits.
-- During MVO, fallback env values are allowed only on trusted internal hosts.
+- Do not store raw secret values in tracked `.env*` templates.

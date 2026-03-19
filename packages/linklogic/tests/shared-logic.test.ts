@@ -7,6 +7,7 @@ import {
   assertTenantMatch,
   buildRunId,
   GSMSecretProvider,
+  inferAgentType,
   parseIdentityDpr,
   parseIdentityMetadata,
   parseIdentityTenant,
@@ -57,6 +58,41 @@ describe("linklogic", () => {
       dprId: "INT-MNG-260311-0001-LISA",
       tenantId: "5bb916ec-8f53-4424-b9fa-9969f1ab384f"
     });
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("parses optional agency persona metadata from identity file", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "identity-test-"));
+    const identityPath = join(tempDir, "IDENTITY.md");
+    writeFileSync(
+      identityPath,
+      'dpr_id: "INT-EXE-260311-0007-ALEX"\nauthorized_tenant_id: "5bb916ec-8f53-4424-b9fa-9969f1ab384f"\nfunctional_baseline: "EXE"\ncurrent_role: "UI/UX Designer"\nagent_type: "uiux_designer"\nagency_persona_ref: "agency.uiux_designer"\npersona_version: "v1"\npersona_source_repo: "https://github.com/linktrend/link-agency-agents"\npersona_fingerprint: "sha256:abc123"\n'
+    );
+
+    expect(parseIdentityMetadata(identityPath)).toEqual({
+      dprId: "INT-EXE-260311-0007-ALEX",
+      tenantId: "5bb916ec-8f53-4424-b9fa-9969f1ab384f",
+      functionalBaseline: "EXE",
+      currentRole: "UI/UX Designer",
+      agentType: "uiux_designer",
+      agencyPersonaRef: "agency.uiux_designer",
+      personaVersion: "v1",
+      personaSourceRepo: "https://github.com/linktrend/link-agency-agents",
+      personaFingerprint: "sha256:abc123"
+    });
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("infers agent type from role when agent_type is absent", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "identity-test-"));
+    const identityPath = join(tempDir, "IDENTITY.md");
+    writeFileSync(
+      identityPath,
+      'dpr_id: "INT-MNG-260311-0004-MARK"\nauthorized_tenant_id: "5bb916ec-8f53-4424-b9fa-9969f1ab384f"\ncurrent_role: "Team Lead"\n'
+    );
+
+    expect(parseIdentityMetadata(identityPath).agentType).toBe("team_lead");
+    expect(inferAgentType("Studio CEO")).toBe("ceo");
     rmSync(tempDir, { recursive: true, force: true });
   });
 
