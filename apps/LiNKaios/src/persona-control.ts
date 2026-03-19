@@ -5,6 +5,7 @@ import type express from "express";
 import { z } from "zod";
 import { parseIdentityMetadata, sha256Hex } from "@linktrend/linklogic";
 import type { AiosEventEnvelope } from "@linktrend/linkskills";
+import { buildPersonaV1Layers } from "./persona-v1.js";
 import {
   discoverInternalAgents,
   evaluateOperationalCertificationFromRoster,
@@ -60,7 +61,7 @@ type PersonaReadinessAgent = {
 };
 
 const PERSONA_FILE_SPECS = [
-  { contentKind: "user", outputFiles: ["user.md"] },
+  { contentKind: "user", outputFiles: ["USER.md"] },
   { contentKind: "identity", outputFiles: ["IDENTITY.md"] },
   { contentKind: "soul", outputFiles: ["soul.md"] },
   { contentKind: "agents", outputFiles: ["AGENTS.md"] },
@@ -139,11 +140,20 @@ const PERSONA_APPROVAL_QUEUE_QUERY_SCHEMA = z.object({
 const PERSONA_IMPORT_SCHEMA = z.object({
   tenantId: z.string().uuid(),
   actorDprId: z.string().min(3),
-  publishImported: z.boolean().default(false)
+  publishImported: z.boolean().default(false),
+  policyPackage: z.string().min(1).optional()
 });
 
 const PERSONA_MIGRATION_EVIDENCE_QUERY_SCHEMA = z.object({
   tenantId: z.string().uuid()
+});
+
+const PERSONA_APPLY_V1_SCHEMA = z.object({
+  tenantId: z.string().uuid(),
+  actorDprId: z.string().min(3),
+  includeBirthDateInUserFile: z.boolean().default(false),
+  policyPackage: z.string().min(1).optional(),
+  compileAfterPublish: z.boolean().default(true)
 });
 
 const POLICY_EVALUATION_SCHEMA = z.object({
@@ -219,7 +229,12 @@ function readExistingPersonaContent(
   profile: AgentProfile,
   kind: (typeof PERSONA_FILE_SPECS)[number]["contentKind"]
 ): string {
-  const candidates = PERSONA_FILE_SPECS.find((spec) => spec.contentKind === kind)?.outputFiles ?? [];
+  const candidates: string[] = [
+    ...(PERSONA_FILE_SPECS.find((spec) => spec.contentKind === kind)?.outputFiles ?? [])
+  ];
+  if (kind === "user" && !candidates.includes("user.md")) {
+    candidates.push("user.md");
+  }
   for (const candidate of candidates) {
     const path = join(profile.agentDir, candidate);
     try {
@@ -255,12 +270,13 @@ function composePersonaBody(args: {
   const layeredBody = args.sections
     .map((section) => `## ${section.label}\n\n${section.body.trim()}`)
     .join("\n\n---\n\n");
+  const mergedBody = mergeNonConflictingLines(layeredBody, args.fallback);
 
   if (args.kind === "identity") {
-    return renderIdentityContract(args.profile, layeredBody);
+    return renderIdentityContract(args.profile, mergedBody);
   }
 
-  return ensureTrailingNewline(layeredBody);
+  return ensureTrailingNewline(mergedBody);
 }
 
 function renderIdentityContract(profile: AgentProfile, body: string): string {
@@ -279,6 +295,43 @@ function renderIdentityContract(profile: AgentProfile, body: string): string {
 
 function ensureTrailingNewline(content: string): string {
   return content.endsWith("\n") ? content : `${content}\n`;
+}
+
+function mergeNonConflictingLines(primary: string, fallback: string): string {
+  if (!fallback.trim()) {
+    return primary;
+  }
+
+  const primaryLineSet = new Set(
+    primary
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+  );
+
+  const extraLines = fallback
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0)
+    .filter((line) => !primaryLineSet.has(line.trim()));
+
+  if (extraLines.length === 0) {
+    return primary;
+  }
+
+  return ensureTrailingNewline(
+    `${primary.trim()}\n\n## Legacy Local Additions (Merged)\n\n${extraLines.join("\n")}`
+  );
+}
+
+function policyPackageLabel(raw?: string): string {
+  if (typeof raw === "string" && raw.trim().length > 0) {
+    return raw.trim();
+  }
+  const now = new Date();
+  const yy = String(now.getUTCFullYear()).slice(-2);
+  const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(now.getUTCDate()).padStart(2, "0");
+  return `agent_persona_policy_${yy}${mm}${dd}`;
 }
 
 function resolveLayeredSections(args: {
@@ -1288,6 +1341,7 @@ export function registerPersonaControlRoutes(deps: PersonaDeps): void {
     try {
       const profiles = listAgentProfiles().filter((profile) => profile.tenantId === parsed.data.tenantId);
       const compiled: Array<{ dprId: string; hash: string }> = [];
+      const packageLabel = policyPackageLabel(parsed.data.policyPackage);
 
       for (const profile of profiles) {
         const bundle = await compilePersonaBundleForAgent({
@@ -1303,11 +1357,13 @@ export function registerPersonaControlRoutes(deps: PersonaDeps): void {
           dprId: profile.dprId,
           expectedRevisionHash: bundle.content_hash,
           acknowledgedRevisionHash: bundle.content_hash,
+          policyPackage: packageLabel,
           syncStatus: "synced",
           syncMetadata: {
             applied_by: parsed.data.actorDprId,
             applied_at: new Date().toISOString(),
-            source: "migration_compile_all"
+            source: "migration_compile_all",
+            policy_package: packageLabel
           },
           lastSyncAt: new Date().toISOString(),
           lastAckAt: new Date().toISOString()
@@ -1316,7 +1372,12 @@ export function registerPersonaControlRoutes(deps: PersonaDeps): void {
         compiled.push({ dprId: profile.dprId, hash: bundle.content_hash });
       }
 
-      return res.status(202).json({ accepted: true, compiledCount: compiled.length, compiled });
+      return res.status(202).json({
+        accepted: true,
+        policyPackage: packageLabel,
+        compiledCount: compiled.length,
+        compiled
+      });
     } catch (error) {
       return res.status(500).json({
         accepted: false,
@@ -1422,6 +1483,127 @@ export function registerPersonaControlRoutes(deps: PersonaDeps): void {
       return res.status(500).json({
         accepted: false,
         reason: error instanceof Error ? error.message : "Unable to build migration evidence package"
+      });
+    }
+  });
+
+  app.post("/persona/migration/apply-v1", async (req, res) => {
+    const parsed = PERSONA_APPLY_V1_SCHEMA.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ accepted: false, reason: parsed.error.flatten() });
+    }
+
+    try {
+      const layers = buildPersonaV1Layers({
+        includeBirthDate: parsed.data.includeBirthDateInUserFile
+      });
+      const existing = await studioBrain.listKnowledgeEntities({
+        tenantId: parsed.data.tenantId,
+        entityKind: "persona"
+      });
+      const existingByKey = new Map(
+        existing.map((entity) => [
+          `${entity.content_kind}:${entity.scope_kind}:${entity.scope_key}:${entity.title}`,
+          entity
+        ])
+      );
+
+      const seeded: Array<{ entityId: string; revisionId: string; title: string }> = [];
+      for (const layer of layers) {
+        const key = `${layer.contentKind}:${layer.scopeKind}:${layer.scopeKey}:${layer.title}`;
+        const entity = existingByKey.get(key) ?? await studioBrain.createKnowledgeEntity({
+          tenantId: parsed.data.tenantId,
+          entityKind: "persona",
+          contentKind: layer.contentKind,
+          scopeKind: layer.scopeKind,
+          scopeKey: layer.scopeKey,
+          title: layer.title,
+          status: "published",
+          createdByAgent: parsed.data.actorDprId,
+          metadata: {
+            source: "persona_v1_seed",
+            seed_version: "v1.0"
+          }
+        });
+        existingByKey.set(key, entity);
+
+        const revision = await studioBrain.createKnowledgeRevision({
+          tenantId: parsed.data.tenantId,
+          entityId: entity.id,
+          status: "published",
+          body: layer.body,
+          metadata: {
+            source: "persona_v1_seed",
+            seed_version: "v1.0"
+          },
+          contentHash: sha256Hex(layer.body),
+          createdByAgent: parsed.data.actorDprId
+        });
+        const published = await studioBrain.publishKnowledgeRevision({
+          tenantId: parsed.data.tenantId,
+          entityId: entity.id,
+          revisionId: revision.id,
+          actorDprId: parsed.data.actorDprId,
+          reason: "persona_v1_apply"
+        });
+
+        seeded.push({ entityId: entity.id, revisionId: published.id, title: layer.title });
+      }
+
+      let compile: {
+        policyPackage: string;
+        compiledCount: number;
+        compiled: Array<{ dprId: string; hash: string }>;
+      } | null = null;
+
+      if (parsed.data.compileAfterPublish) {
+        const packageLabel = policyPackageLabel(parsed.data.policyPackage);
+        const profiles = listAgentProfiles().filter((profile) => profile.tenantId === parsed.data.tenantId);
+        const compiled: Array<{ dprId: string; hash: string }> = [];
+        for (const profile of profiles) {
+          const bundle = await compilePersonaBundleForAgent({
+            studioBrain,
+            tenantId: parsed.data.tenantId,
+            profile,
+            actorDprId: parsed.data.actorDprId
+          });
+          applyBundleToLocalFiles(profile, bundle.bundle);
+          await studioBrain.upsertPersonaAgentSyncState({
+            tenantId: parsed.data.tenantId,
+            dprId: profile.dprId,
+            expectedRevisionHash: bundle.content_hash,
+            acknowledgedRevisionHash: bundle.content_hash,
+            policyPackage: packageLabel,
+            syncStatus: "synced",
+            syncMetadata: {
+              source: "persona_v1_apply",
+              applied_by: parsed.data.actorDprId,
+              applied_at: new Date().toISOString(),
+              policy_package: packageLabel
+            },
+            lastSyncAt: new Date().toISOString(),
+            lastAckAt: new Date().toISOString()
+          });
+          compiled.push({ dprId: profile.dprId, hash: bundle.content_hash });
+        }
+
+        compile = {
+          policyPackage: packageLabel,
+          compiledCount: compiled.length,
+          compiled
+        };
+      }
+
+      return res.status(202).json({
+        accepted: true,
+        seededCount: seeded.length,
+        seeded,
+        compile
+      });
+    } catch (error) {
+      return res.status(500).json({
+        accepted: false,
+        reason: error instanceof Error ? error.message : "Unable to apply v1 persona seed"
       });
     }
   });

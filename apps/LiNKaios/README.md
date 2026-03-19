@@ -39,6 +39,7 @@ Canonical internal tenant UUID for MVO fixtures/examples:
 - `POST /persona/sync/ack`
 - `POST /persona/migration/import-local`
 - `POST /persona/migration/compile-all`
+- `POST /persona/migration/apply-v1`
 - `POST /policies/evaluate`
 - `POST /policies/killswitch`
 
