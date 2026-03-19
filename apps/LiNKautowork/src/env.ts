@@ -14,6 +14,10 @@ const EnvSchema = z.object({
     .default("LINKTREND_AIOS_PROD_POSTMARK_SERVER_TOKEN"),
   LINKTREND_AIOS_PROD_OPENROUTER_API_KEY: z.string().min(20).optional(),
   OPENROUTER_API_KEY_SECRET_NAME: z.string().default("LINKTREND_AIOS_PROD_OPENROUTER_API_KEY"),
+  SLACK_OPERATIONS_WEBHOOK_URL: z.string().url().optional(),
+  SLACK_APPROVALS_WEBHOOK_URL: z.string().url().optional(),
+  AIOS_CHAIRMAN_BRIEFING_URL: z.string().url().optional(),
+  NATS_URL: z.string().url().optional(),
   GOOGLE_CLOUD_PROJECT: z.string().min(1).optional(),
   GCP_PROJECT: z.string().min(1).optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().min(1).optional()

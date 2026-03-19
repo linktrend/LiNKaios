@@ -1,0 +1,75 @@
+{
+  "name": "AIOS Restore Authorization Governance",
+  "nodes": [
+    {
+      "name": "Restore Request Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aios/archive/restore-request"
+      }
+    },
+    {
+      "name": "Require CEO CTO Recommendation",
+      "type": "n8n-nodes-base.function",
+      "parameters": {
+        "functionCode": "const body = items[0].json;\nif (!body.ceoRecommendation || !body.ctoRecommendation) { throw new Error('CEO and CTO recommendations required before restore'); }\nreturn items;"
+      }
+    },
+    {
+      "name": "Post To Chairman Approval Thread",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.SLACK_APPROVALS_WEBHOOK_URL || $env.SLACK_OPERATIONS_WEBHOOK_URL}}",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ { text: '[Restore Approval Needed] CEO/CTO recommended restore. Await Chairman final sign-off at 08:00 Taipei.' } }}"
+      }
+    },
+    {
+      "name": "Execute Restore",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.SUPABASE_RESTORE_RPC}}",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{$json}}"
+      }
+    }
+  ],
+  "connections": {
+    "Restore Request Trigger": {
+      "main": [
+        [
+          {
+            "node": "Require CEO CTO Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Require CEO CTO Recommendation": {
+      "main": [
+        [
+          {
+            "node": "Post To Chairman Approval Thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post To Chairman Approval Thread": {
+      "main": [
+        [
+          {
+            "node": "Execute Restore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

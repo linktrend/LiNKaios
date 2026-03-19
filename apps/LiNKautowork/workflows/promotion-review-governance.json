@@ -1,0 +1,54 @@
+{
+  "name": "AIOS Promotion Review Governance",
+  "nodes": [
+    {
+      "name": "Promotion Candidate Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aios/promotions/review"
+      }
+    },
+    {
+      "name": "Require CEO CTO Recommendation",
+      "type": "n8n-nodes-base.function",
+      "parameters": {
+        "functionCode": "const body = items[0].json;\nif (!body.ceoRecommendation || !body.ctoRecommendation) { throw new Error('CEO and CTO recommendations required'); }\nreturn items;"
+      }
+    },
+    {
+      "name": "Post To Chairman Approval Thread",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.SLACK_APPROVALS_WEBHOOK_URL || $env.SLACK_OPERATIONS_WEBHOOK_URL}}",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ { text: '[Promotion Approval Needed] CEO/CTO recommended. Await Chairman final sign-off at 08:00 Taipei.' } }}"
+      }
+    }
+  ],
+  "connections": {
+    "Promotion Candidate Trigger": {
+      "main": [
+        [
+          {
+            "node": "Require CEO CTO Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Require CEO CTO Recommendation": {
+      "main": [
+        [
+          {
+            "node": "Post To Chairman Approval Thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

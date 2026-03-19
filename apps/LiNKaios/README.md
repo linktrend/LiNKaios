@@ -1,23 +1,58 @@
 # LiNKaios Service Adapter
 
-Thin orchestration adapter that enforces mission payload contracts and tenant guardrails before handing work to manager/worker queues.
+Control-plane adapter for MVO mission intake, canonical `aios.*` event publishing, LiNKskills managed execution, LiNKbrain audit persistence, and Slack operations/approval signaling.
+
+Canonical internal tenant UUID for MVO fixtures/examples:
+
+- `00000000-0000-0000-0000-000000000001`
 
 ## Endpoints
 
 - `GET /health`
+- `GET /agents/discovery`
+- `GET /briefings/chairman/daily?tenantId=<uuid>&runId=<optional>`
+- `GET /briefings/chairman/operational-pulse?tenantId=<uuid>&runId=<optional>`
+- `GET /briefings/chairman/quality-gate?tenantId=<uuid>&runId=<optional>`
+- `GET /evidence/mvo/predeploy?tenantId=<uuid>&runId=<optional>`
 - `POST /missions/start`
+- `POST /tasks/handoff`
+- `POST /tasks/accept`
+- `POST /tasks/complete`
+- `POST /skills/execute`
+- `POST /approvals/request`
+- `POST /approvals/decide`
 - `POST /events/urgent`
 
-## Security behavior
+## Event Bus Contract
 
-- Requires ingress authentication for all POST routes via `Authorization: Bearer <AIOS_INGRESS_TOKEN>` (or `x-aios-ingress-token`).
-- Rejects payloads missing tenant context.
-- Resolves agent identity files from an internal allowlist path based on mission `dprId`.
-- Halts when identity tenant or DPR does not match mission payload values.
-- Emits security exception response payload for audit logging workflows.
+- Primary taxonomy is Paperclip canonical `aios.*`.
+- Transport mode is JetStream publish with `msgID = idempotencyKey`.
+- Health output includes stream readiness, publish ack mode, and last publish ack/error.
 
-## Secret sourcing
+## Governance and Messaging
 
-- Uses `loadEnv` in `src/env.ts`.
-- Resolution order for MVO: local `.env` value first, then Google Secret Manager.
-- GSM reads require `GOOGLE_CLOUD_PROJECT` and `GOOGLE_APPLICATION_CREDENTIALS`.
+- Slack-only operations for MVO (Telegram disabled).
+- Approval events route to approvals webhook first, fallback to operations webhook.
+- Non-approval operational events route to operations webhook.
+- Ritual support surfaces:
+  - 08:00 Asia/Taipei strategic window.
+  - 10:45 Asia/Taipei operational pulse window.
+  - 14:45 Asia/Taipei quality gate window.
+
+## Security Behavior
+
+- All POST routes require ingress token:
+  - `Authorization: Bearer <AIOS_INGRESS_TOKEN>`, or
+  - `x-aios-ingress-token: <AIOS_INGRESS_TOKEN>`
+- Mission/agent validation enforces tenant+DPR identity binding via local `IDENTITY.md`.
+- Security mismatches emit `aios.security.exception` and audit traces.
+- LiNKskills requests include mission lineage and idempotency.
+
+## MVO Pre-Deployment Harness
+
+- Run stack:
+  - `./scripts/mvo-up.sh`
+- Execute end-to-end pre-deployment harness:
+  - `./scripts/mvo-predeploy-acceptance.sh`
+- Evidence artifact output:
+  - `artifacts/mvo-predeploy/*.json`

@@ -1,0 +1,63 @@
+{
+  "name": "AIOS Daily Chairman Briefing",
+  "nodes": [
+    {
+      "name": "Daily Trigger 08:00 Taipei",
+      "type": "n8n-nodes-base.cron",
+      "parameters": {
+        "timezone": "Asia/Taipei",
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 8,
+              "minute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Fetch Daily Brief",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.AIOS_CHAIRMAN_BRIEFING_URL}}",
+        "method": "GET"
+      }
+    },
+    {
+      "name": "Post Brief To Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$env.SLACK_APPROVALS_WEBHOOK_URL || $env.SLACK_OPERATIONS_WEBHOOK_URL}}",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ { text: '[Daily Chairman Briefing] Pending approvals: ' + ($json.pendingApprovals?.length || 0) + ', security exceptions: ' + ($json.securityExceptions?.length || 0) } }}"
+      }
+    }
+  ],
+  "connections": {
+    "Daily Trigger 08:00 Taipei": {
+      "main": [
+        [
+          {
+            "node": "Fetch Daily Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Daily Brief": {
+      "main": [
+        [
+          {
+            "node": "Post Brief To Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

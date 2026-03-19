@@ -5,6 +5,7 @@ Target OS: Debian 12
 ## Responsibilities
 
 - Host orchestration plane services
+- Host NATS transport for cross-agent handoffs
 - Run n8n and Paperclip adapter service
 - Route urgent events to orchestration
 - Enforce network hardening and trusted ingress

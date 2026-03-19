@@ -10,14 +10,27 @@ pnpm test
 printf "\n==> Required tree checks\n"
 required_paths=(
   "docs/AIOS_MASTER_SPEC.md"
+  "docs/MVO_EXECUTION_LEDGER.md"
+  "docs/UNIFIED_DEV_TEST_RUNBOOK.md"
   "infra/debian-vps/docker-compose.yml"
   "infra/mac-mini/README.md"
   "packages/linkbrain/migrations/0001_init.sql"
   "apps/LiNKaios/src/index.ts"
+  "apps/LiNKaios/src/nats.ts"
+  "scripts/mvo-predeploy-acceptance.sh"
+  "scripts/unified-dev-check.sh"
   "apps/LiNKautowork/workflows/hot-cold-migration.json"
+  "apps/LiNKautowork/workflows/heartbeat-triage.json"
+  "apps/LiNKautowork/workflows/daily-chairman-briefing.json"
+  "apps/LiNKautowork/workflows/security-exception-response.json"
+  "apps/LiNKautowork/workflows/promotion-review-governance.json"
+  "apps/LiNKautowork/workflows/restore-authorization-governance.json"
   "agents/internal/managers/INT-MNG-260311-0001-LISA/soul.md"
+  "agents/internal/managers/INT-MNG-260311-0004-MARK/soul.md"
   "agents/internal/workers/INT-EXE-260311-0005-MIKE/soul.md"
   "agents/internal/workers/INT-EXE-260311-0005-MIKE/main.py"
+  "agents/internal/workers/INT-EXE-260311-0007-ALEX/soul.md"
+  "agents/internal/workers/INT-EXE-260311-0007-ALEX/main.py"
 )
 
 for path in "${required_paths[@]}"; do

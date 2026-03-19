@@ -28,3 +28,6 @@ linkbots/
 
 # Tooling caches
 .turbo/
+
+# Generated validation artifacts
+artifacts/
