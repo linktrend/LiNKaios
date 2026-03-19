@@ -32,6 +32,7 @@ import { requestCouncilSynthesis } from "./linkboard.js";
 import { createLiNKskillsBridge } from "./linkskills.js";
 import { createAiosEventBus } from "./nats.js";
 import { postSlackStatus, toSlackCard } from "./slack.js";
+import { registerPersonaControlRoutes } from "./persona-control.js";
 
 const MissionEventRequestSchema = z.object({
   tenantId: z.string().uuid(),
@@ -137,11 +138,15 @@ app.use((req, res, next) => {
   return next();
 });
 
-app.get("/health", (_req, res) => {
+app.get("/health", async (_req, res) => {
   const roster = discoverInternalAgents();
   const agencyReadiness = evaluateAgencyReadiness();
   const operationalCertification = evaluateOperationalCertification();
   const busHealth = eventBus.health();
+  const personaCentralization = await buildPersonaCentralizationSummary(
+    "00000000-0000-0000-0000-000000000001",
+    roster
+  );
 
   res.json({
     status: "ok",
@@ -151,6 +156,7 @@ app.get("/health", (_req, res) => {
     agencyReadiness: agencyReadiness.summary,
     operationalCertification: operationalCertification.summary,
     eventBus: busHealth,
+    personaCentralization,
     linkskills: linkskillsBridge.enabled ? "configured" : "disabled",
     chairmanApprovalWindow: {
       time: env.CHAIRMAN_APPROVAL_TIME,
@@ -165,18 +171,31 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.get("/agents/discovery", (_req, res) => {
+app.get("/agents/discovery", async (_req, res) => {
   const roster = discoverInternalAgents();
   const agencyReadiness = evaluateAgencyReadiness();
   const operationalCertification = evaluateOperationalCertification();
+  const personaCentralization = await buildPersonaCentralizationSummary(
+    "00000000-0000-0000-0000-000000000001",
+    roster
+  );
   res.json({
     managers: roster.managers,
     workers: roster.workers,
     agencyReadiness: agencyReadiness.summary,
     agencyAgents: agencyReadiness.agents,
     operationalCertification: operationalCertification.summary,
-    certifiedAgents: operationalCertification.agents
+    certifiedAgents: operationalCertification.agents,
+    personaCentralization
   });
+});
+
+registerPersonaControlRoutes({
+  app,
+  studioBrain,
+  defaultTenantId: "00000000-0000-0000-0000-000000000001",
+  createEvent: buildEvent,
+  emitEvent
 });
 
 app.get("/briefings/chairman/daily", async (req, res) => {
@@ -1075,6 +1094,48 @@ function countStatuses(audits: AuditRunRecord[]): Record<string, number> {
     counts[audit.status] = (counts[audit.status] ?? 0) + 1;
   }
   return counts;
+}
+
+async function buildPersonaCentralizationSummary(
+  tenantId: string,
+  roster: ReturnType<typeof discoverInternalAgents>
+): Promise<{
+  totalAgents: number;
+  publishedBundles: number;
+  acknowledgedBundles: number;
+  policyAssignedAgents: number;
+  readyAgents: number;
+}> {
+  const dprIds = [...roster.managers, ...roster.workers];
+  const syncState = await studioBrain.listPersonaAgentSyncState({ tenantId }).catch(() => []);
+  const syncByDpr = new Map(syncState.map((entry) => [entry.dpr_id, entry]));
+
+  let publishedBundles = 0;
+  let acknowledgedBundles = 0;
+  let policyAssignedAgents = 0;
+  let readyAgents = 0;
+
+  for (const dprId of dprIds) {
+    const bundle = await studioBrain.getLatestPersonaBundle({ tenantId, dprId }).catch(() => null);
+    const sync = syncByDpr.get(dprId);
+
+    const hasBundle = Boolean(bundle);
+    const hasAck = Boolean(bundle && sync?.acknowledged_revision_hash === bundle.content_hash);
+    const hasPolicyPackage = Boolean(sync?.policy_package);
+
+    if (hasBundle) publishedBundles += 1;
+    if (hasAck) acknowledgedBundles += 1;
+    if (hasPolicyPackage) policyAssignedAgents += 1;
+    if (hasBundle && hasAck && hasPolicyPackage) readyAgents += 1;
+  }
+
+  return {
+    totalAgents: dprIds.length,
+    publishedBundles,
+    acknowledgedBundles,
+    policyAssignedAgents,
+    readyAgents
+  };
 }
 
 async function logAuditCritical(args: {
