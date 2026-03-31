@@ -1,0 +1,26 @@
+name: security-gate
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @linktrend/LiNKaios check
+      - run: pnpm --filter @linktrend/LiNKaios test
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/owasp-top-ten
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: pnpm audit --audit-level high

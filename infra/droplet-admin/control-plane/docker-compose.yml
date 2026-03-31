@@ -1,0 +1,50 @@
+services:
+  reverse-proxy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [controlplane]
+    depends_on:
+      - oauth2-proxy
+      - paperclip
+      - linkaios
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
+    restart: unless-stopped
+    env_file:
+      - .env.runtime
+    networks: [controlplane]
+
+  paperclip:
+    image: ghcr.io/paperclipai/paperclip:latest
+    restart: unless-stopped
+    env_file:
+      - .env.runtime
+    environment:
+      PAPERCLIP_DEPLOYMENT_MODE: authenticated
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: private
+    networks: [controlplane]
+
+  linkaios:
+    build:
+      context: ../../..
+      dockerfile: infra/droplet-admin/control-plane/linkaios.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.runtime
+    networks: [controlplane]
+
+networks:
+  controlplane:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

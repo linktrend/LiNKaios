@@ -42,3 +42,13 @@ Secret management: `docs/SECRET_MANAGEMENT.md`
    - `./scripts/mvo-predeploy-acceptance.sh`
 8. Execute unified cross-repo readiness and evidence harness:
    - `./scripts/unified-dev-check.sh`
+
+## LiNKdroplet Admin Bundle
+
+Production-oriented control-plane artifacts are in:
+- `infra/droplet-admin/control-plane/`
+
+This bundle provides:
+- reverse-proxy TLS termination,
+- Supabase-authenticated operator gateway pattern,
+- Paperclip + LiNKaios internal service network deployment.

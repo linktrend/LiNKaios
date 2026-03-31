@@ -1,0 +1,36 @@
+{
+  email {$TLS_EMAIL}
+}
+
+{$PUBLIC_HOSTNAME} {
+  encode zstd gzip
+
+  @paperclip path /api/* /ws* /auth/* /inbox* /companies* /agents* /issues*
+  @linkaios path /aios/* /health/linkaios
+
+  # Require authenticated session from oauth2-proxy before upstream forwarding.
+  forward_auth oauth2-proxy:4180 {
+    uri /oauth2/auth
+    copy_headers X-Auth-Request-Email X-Auth-Request-User X-Auth-Request-Access-Token
+  }
+
+  handle @paperclip {
+    reverse_proxy paperclip:3100
+  }
+
+  handle @linkaios {
+    uri strip_prefix /aios
+    reverse_proxy linkaios:4000
+  }
+
+  handle {
+    reverse_proxy paperclip:3100
+  }
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "no-referrer"
+  }
+}
