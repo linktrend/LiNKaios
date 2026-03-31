@@ -47,15 +47,15 @@ If a thread conflicts with the master spec, the spec wins unless explicitly supe
 
 Supabase schemas:
 
-- `core`: tenant registry and helper functions.
-- `shared_memory`: long-term memory + missions/policies/proposals/lessons/audit.
-- `scratch_memory`: temporary working memory.
+- `lb_core`: tenant registry and helper functions.
+- `lb_shared`: long-term memory + missions/policies/proposals/lessons/audit.
+- `lb_scratch`: temporary working memory.
 
 RLS and tenant contract:
 
 - Every tenant-scoped table has `tenant_id`.
 - Security-definer RPC strategy is used for data operations.
-- Tenant hard-fail behavior is enforced through `core.current_tenant()` semantics.
+- Tenant hard-fail behavior is enforced through `lb_core.current_tenant()` semantics.
 
 ### 3.3 Secrets and naming standard
 
@@ -152,7 +152,7 @@ To handle non-sticky PostgREST sessions, public RPC wrappers were updated to acc
 ### 6.1 Supabase
 
 - SQL delta (tenant-aware wrappers + helper RPCs) was reported as applied by user.
-- Live acceptance data exists in `shared_memory.audit_runs` for run `LT-ALPHA-001` using an auto-generated tenant UUID.
+- Live acceptance data exists in `lb_shared.audit_runs` for run `LT-ALPHA-001` using an auto-generated tenant UUID.
 - `bootstrap_tenant` currently creates random tenant IDs unless fixed-ID row already exists.
 
 ### 6.2 GSM / GCP
@@ -171,10 +171,10 @@ To handle non-sticky PostgREST sessions, public RPC wrappers were updated to acc
 1. **Canonical internal tenant ID mismatch in live DB**
    - Agents use `authorized_tenant_id = 00000000-0000-0000-0000-000000000001`.
    - Workstream evidence used an auto-generated tenant UUID when bootstrapping via RPC.
-   - A fixed row for `000...001` must exist in `core.tenants` in live Supabase.
+   - A fixed row for `000...001` must exist in `lb_core.tenants` in live Supabase.
 
 2. **Potential SQL defect in migration file to verify before next apply**
-   - In `packages/linkbrain/migrations/0001_init.sql`, validate `shared_memory.upsert_mission` insert values count matches columns (created_by_agent appears duplicated in current local file snapshot).
+   - In `packages/linkbrain/migrations/0001_init.sql`, validate `lb_shared.upsert_mission` insert values count matches columns (created_by_agent appears duplicated in current local file snapshot).
    - New Codex instance should fix this immediately before further migration rollouts.
 
 3. **GSM secret payload quality**
@@ -187,7 +187,7 @@ To handle non-sticky PostgREST sessions, public RPC wrappers were updated to acc
 
 ## 8) Workstream 9 evidence status (what has already been proven)
 
-Evidence retrieved from live `shared_memory.audit_runs` includes:
+Evidence retrieved from live `lb_shared.audit_runs` includes:
 
 - `LT-ALPHA-001 / TASK-CEO-001` => `active`, DPR recorded, tenant gate pass.
 - `LT-ALPHA-001 / TASK-SEC-001` => `security_exception`, DPR recorded, tenant gate fail.

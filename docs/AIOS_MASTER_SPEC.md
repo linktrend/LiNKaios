@@ -15,7 +15,7 @@
 
 1. Any architecture, security, or workflow decision changes must update this file in the same change set.
 2. If thread-level guidance conflicts with this file, this file wins unless explicitly superseded by Chairman approval.
-3. Production-impacting changes require CEO + CTO review and audit note in `shared_memory.proposals`.
+3. Production-impacting changes require CEO + CTO review and audit note in `lb_shared.proposals`.
 
 ## Product Intent
 
@@ -99,19 +99,19 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 
 ### Schemas
 
-- `core`: tenant registry and shared guardrail helpers.
-- `shared_memory`: long-term collective knowledge and audit trail.
-- `scratch_memory`: transient agent working memory.
+- `lb_core`: tenant registry and shared guardrail helpers.
+- `lb_shared`: long-term collective knowledge and audit trail.
+- `lb_scratch`: transient agent working memory.
 
 ### Required Tables
 
-- `core.tenants`
-- `shared_memory.missions`
-- `shared_memory.policies`
-- `shared_memory.proposals`
-- `shared_memory.lessons`
-- `shared_memory.audit_runs`
-- `scratch_memory.entries`
+- `lb_core.tenants`
+- `lb_shared.missions`
+- `lb_shared.policies`
+- `lb_shared.proposals`
+- `lb_shared.lessons`
+- `lb_shared.audit_runs`
+- `lb_scratch.entries`
 
 ### Vector Search
 
@@ -121,7 +121,7 @@ LiNKtrend AIOS is a venture-factory operating system where a single Chairman gov
 
 ### Memory Promotion
 
-- Promotion source: `scratch_memory.entries`.
+- Promotion source: `lb_scratch.entries`.
 - Auto-promotion threshold: confidence `>= 0.85`.
 - Every auto-promotion marked `requires_review` for CEO/CTO recommendation and Chairman final approval in the 08:00 briefing window (until delegation policy changes).
 

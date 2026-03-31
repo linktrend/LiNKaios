@@ -22,7 +22,7 @@
 ## Memory Tests
 
 1. Ollama embedding returns 768-d vector (`nomic-embed-text`).
-2. `scratch_memory.entries` to `shared_memory.lessons` promotion enforces threshold >= 0.85.
+2. `lb_scratch.entries` to `lb_shared.lessons` promotion enforces threshold >= 0.85.
 3. Promoted lessons are created with `requires_review = true`.
 4. Promotion decisions require CEO/CTO recommendation before Chairman final approval.
 

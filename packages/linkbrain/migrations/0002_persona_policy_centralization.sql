@@ -1,8 +1,8 @@
 -- Persona + Policy centralization for LiNKbrain
 
-create table if not exists shared_memory.knowledge_entities (
+create table if not exists lb_shared.knowledge_entities (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   entity_kind text not null check (entity_kind in ('persona', 'policy', 'guideline', 'guardrail', 'sop')),
   content_kind text not null check (
     content_kind in (
@@ -33,10 +33,10 @@ create table if not exists shared_memory.knowledge_entities (
   unique (tenant_id, entity_kind, content_kind, scope_kind, scope_key, title)
 );
 
-create table if not exists shared_memory.knowledge_revisions (
+create table if not exists lb_shared.knowledge_revisions (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
-  entity_id uuid not null references shared_memory.knowledge_entities(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
+  entity_id uuid not null references lb_shared.knowledge_entities(id) on delete cascade,
   revision_number integer not null check (revision_number > 0),
   status text not null check (status in ('draft', 'review', 'approved', 'published', 'deprecated')),
   body text not null,
@@ -45,20 +45,20 @@ create table if not exists shared_memory.knowledge_revisions (
   created_by_agent text not null,
   approved_by_agent text,
   published_at timestamptz,
-  rolled_back_from_revision_id uuid references shared_memory.knowledge_revisions(id) on delete set null,
+  rolled_back_from_revision_id uuid references lb_shared.knowledge_revisions(id) on delete set null,
   created_at timestamptz not null default now(),
   unique (entity_id, revision_number)
 );
 
-alter table shared_memory.knowledge_entities
+alter table lb_shared.knowledge_entities
   add constraint knowledge_entities_published_revision_fk
   foreign key (published_revision_id)
-  references shared_memory.knowledge_revisions(id)
+  references lb_shared.knowledge_revisions(id)
   on delete set null;
 
-create table if not exists shared_memory.persona_compiled_bundles (
+create table if not exists lb_shared.persona_compiled_bundles (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   dpr_id text not null,
   source_revision_ids uuid[] not null default '{}'::uuid[],
   bundle jsonb not null default '{}'::jsonb,
@@ -69,9 +69,9 @@ create table if not exists shared_memory.persona_compiled_bundles (
   unique (tenant_id, dpr_id, content_hash)
 );
 
-create table if not exists shared_memory.persona_agent_sync_state (
+create table if not exists lb_shared.persona_agent_sync_state (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   dpr_id text not null,
   expected_revision_hash text,
   acknowledged_revision_hash text,
@@ -84,11 +84,11 @@ create table if not exists shared_memory.persona_agent_sync_state (
   unique (tenant_id, dpr_id)
 );
 
-create table if not exists shared_memory.persona_revision_audit (
+create table if not exists lb_shared.persona_revision_audit (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
-  entity_id uuid not null references shared_memory.knowledge_entities(id) on delete cascade,
-  revision_id uuid references shared_memory.knowledge_revisions(id) on delete set null,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
+  entity_id uuid not null references lb_shared.knowledge_entities(id) on delete cascade,
+  revision_id uuid references lb_shared.knowledge_revisions(id) on delete set null,
   action text not null check (action in ('created', 'submitted_review', 'approved', 'published', 'rolled_back')),
   actor_dpr_id text not null,
   reason text,
@@ -96,9 +96,9 @@ create table if not exists shared_memory.persona_revision_audit (
   created_at timestamptz not null default now()
 );
 
-create table if not exists shared_memory.policy_decisions (
+create table if not exists lb_shared.policy_decisions (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   run_id text,
   task_id text,
   dpr_id text not null,
@@ -112,9 +112,9 @@ create table if not exists shared_memory.policy_decisions (
   created_at timestamptz not null default now()
 );
 
-create table if not exists shared_memory.kill_switch_states (
+create table if not exists lb_shared.kill_switch_states (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   scope text not null check (scope in ('agent', 'workflow', 'tenant', 'global')),
   target_key text not null,
   state text not null check (state in ('active', 'released')),
@@ -125,63 +125,63 @@ create table if not exists shared_memory.kill_switch_states (
 );
 
 create unique index if not exists idx_kill_switch_active_unique
-on shared_memory.kill_switch_states (tenant_id, scope, target_key)
+on lb_shared.kill_switch_states (tenant_id, scope, target_key)
 where state = 'active';
 
-create index if not exists idx_knowledge_entities_tenant on shared_memory.knowledge_entities (tenant_id);
-create index if not exists idx_knowledge_entities_scope on shared_memory.knowledge_entities (tenant_id, scope_kind, scope_key);
-create index if not exists idx_knowledge_revisions_tenant on shared_memory.knowledge_revisions (tenant_id, entity_id, revision_number desc);
-create index if not exists idx_persona_bundles_tenant on shared_memory.persona_compiled_bundles (tenant_id, dpr_id, created_at desc);
-create index if not exists idx_persona_sync_tenant on shared_memory.persona_agent_sync_state (tenant_id, dpr_id);
-create index if not exists idx_persona_revision_audit_tenant on shared_memory.persona_revision_audit (tenant_id, created_at desc);
-create index if not exists idx_policy_decisions_tenant on shared_memory.policy_decisions (tenant_id, created_at desc);
-create index if not exists idx_kill_switch_tenant on shared_memory.kill_switch_states (tenant_id, created_at desc);
+create index if not exists idx_knowledge_entities_tenant on lb_shared.knowledge_entities (tenant_id);
+create index if not exists idx_knowledge_entities_scope on lb_shared.knowledge_entities (tenant_id, scope_kind, scope_key);
+create index if not exists idx_knowledge_revisions_tenant on lb_shared.knowledge_revisions (tenant_id, entity_id, revision_number desc);
+create index if not exists idx_persona_bundles_tenant on lb_shared.persona_compiled_bundles (tenant_id, dpr_id, created_at desc);
+create index if not exists idx_persona_sync_tenant on lb_shared.persona_agent_sync_state (tenant_id, dpr_id);
+create index if not exists idx_persona_revision_audit_tenant on lb_shared.persona_revision_audit (tenant_id, created_at desc);
+create index if not exists idx_policy_decisions_tenant on lb_shared.policy_decisions (tenant_id, created_at desc);
+create index if not exists idx_kill_switch_tenant on lb_shared.kill_switch_states (tenant_id, created_at desc);
 
-alter table shared_memory.knowledge_entities enable row level security;
-alter table shared_memory.knowledge_revisions enable row level security;
-alter table shared_memory.persona_compiled_bundles enable row level security;
-alter table shared_memory.persona_agent_sync_state enable row level security;
-alter table shared_memory.persona_revision_audit enable row level security;
-alter table shared_memory.policy_decisions enable row level security;
-alter table shared_memory.kill_switch_states enable row level security;
+alter table lb_shared.knowledge_entities enable row level security;
+alter table lb_shared.knowledge_revisions enable row level security;
+alter table lb_shared.persona_compiled_bundles enable row level security;
+alter table lb_shared.persona_agent_sync_state enable row level security;
+alter table lb_shared.persona_revision_audit enable row level security;
+alter table lb_shared.policy_decisions enable row level security;
+alter table lb_shared.kill_switch_states enable row level security;
 
-create policy knowledge_entities_tenant_policy on shared_memory.knowledge_entities
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy knowledge_entities_tenant_policy on lb_shared.knowledge_entities
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy knowledge_revisions_tenant_policy on shared_memory.knowledge_revisions
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy knowledge_revisions_tenant_policy on lb_shared.knowledge_revisions
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy persona_compiled_bundles_tenant_policy on shared_memory.persona_compiled_bundles
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy persona_compiled_bundles_tenant_policy on lb_shared.persona_compiled_bundles
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy persona_agent_sync_state_tenant_policy on shared_memory.persona_agent_sync_state
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy persona_agent_sync_state_tenant_policy on lb_shared.persona_agent_sync_state
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy persona_revision_audit_tenant_policy on shared_memory.persona_revision_audit
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy persona_revision_audit_tenant_policy on lb_shared.persona_revision_audit
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy policy_decisions_tenant_policy on shared_memory.policy_decisions
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy policy_decisions_tenant_policy on lb_shared.policy_decisions
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy kill_switch_states_tenant_policy on shared_memory.kill_switch_states
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy kill_switch_states_tenant_policy on lb_shared.kill_switch_states
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-revoke all on shared_memory.knowledge_entities from anon, authenticated, service_role;
-revoke all on shared_memory.knowledge_revisions from anon, authenticated, service_role;
-revoke all on shared_memory.persona_compiled_bundles from anon, authenticated, service_role;
-revoke all on shared_memory.persona_agent_sync_state from anon, authenticated, service_role;
-revoke all on shared_memory.persona_revision_audit from anon, authenticated, service_role;
-revoke all on shared_memory.policy_decisions from anon, authenticated, service_role;
-revoke all on shared_memory.kill_switch_states from anon, authenticated, service_role;
+revoke all on lb_shared.knowledge_entities from anon, authenticated, service_role;
+revoke all on lb_shared.knowledge_revisions from anon, authenticated, service_role;
+revoke all on lb_shared.persona_compiled_bundles from anon, authenticated, service_role;
+revoke all on lb_shared.persona_agent_sync_state from anon, authenticated, service_role;
+revoke all on lb_shared.persona_revision_audit from anon, authenticated, service_role;
+revoke all on lb_shared.policy_decisions from anon, authenticated, service_role;
+revoke all on lb_shared.kill_switch_states from anon, authenticated, service_role;
 
-create or replace function shared_memory.guard_knowledge_revision_update()
+create or replace function lb_shared.guard_knowledge_revision_update()
 returns trigger
 language plpgsql
 as $$
@@ -205,12 +205,12 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_guard_knowledge_revision_update on shared_memory.knowledge_revisions;
+drop trigger if exists trg_guard_knowledge_revision_update on lb_shared.knowledge_revisions;
 create trigger trg_guard_knowledge_revision_update
-before update on shared_memory.knowledge_revisions
-for each row execute function shared_memory.guard_knowledge_revision_update();
+before update on lb_shared.knowledge_revisions
+for each row execute function lb_shared.guard_knowledge_revision_update();
 
-create or replace function shared_memory.create_knowledge_entity(
+create or replace function lb_shared.create_knowledge_entity(
   p_entity_kind text,
   p_content_kind text,
   p_scope_kind text,
@@ -220,16 +220,16 @@ create or replace function shared_memory.create_knowledge_entity(
   p_created_by_agent text,
   p_metadata jsonb
 )
-returns shared_memory.knowledge_entities
+returns lb_shared.knowledge_entities
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  entity_row shared_memory.knowledge_entities;
+  tenant_uuid uuid := lb_core.current_tenant();
+  entity_row lb_shared.knowledge_entities;
 begin
-  insert into shared_memory.knowledge_entities (
+  insert into lb_shared.knowledge_entities (
     tenant_id,
     entity_kind,
     content_kind,
@@ -263,7 +263,7 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.create_knowledge_revision(
+create or replace function lb_shared.create_knowledge_revision(
   p_entity_id uuid,
   p_status text,
   p_body text,
@@ -272,19 +272,19 @@ create or replace function shared_memory.create_knowledge_revision(
   p_created_by_agent text,
   p_rolled_back_from_revision_id uuid default null
 )
-returns shared_memory.knowledge_revisions
+returns lb_shared.knowledge_revisions
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
+  tenant_uuid uuid := lb_core.current_tenant();
   next_revision integer;
-  revision_row shared_memory.knowledge_revisions;
-  entity_row shared_memory.knowledge_entities;
+  revision_row lb_shared.knowledge_revisions;
+  entity_row lb_shared.knowledge_entities;
 begin
   select * into entity_row
-  from shared_memory.knowledge_entities
+  from lb_shared.knowledge_entities
   where id = p_entity_id and tenant_id = tenant_uuid;
 
   if not found then
@@ -293,10 +293,10 @@ begin
 
   select coalesce(max(revision_number), 0) + 1
   into next_revision
-  from shared_memory.knowledge_revisions
+  from lb_shared.knowledge_revisions
   where entity_id = p_entity_id and tenant_id = tenant_uuid;
 
-  insert into shared_memory.knowledge_revisions (
+  insert into lb_shared.knowledge_revisions (
     tenant_id,
     entity_id,
     revision_number,
@@ -319,7 +319,7 @@ begin
   )
   returning * into revision_row;
 
-  insert into shared_memory.persona_revision_audit (
+  insert into lb_shared.persona_revision_audit (
     tenant_id,
     entity_id,
     revision_id,
@@ -339,23 +339,23 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.publish_knowledge_revision(
+create or replace function lb_shared.publish_knowledge_revision(
   p_entity_id uuid,
   p_revision_id uuid,
   p_actor_dpr_id text,
   p_reason text default null
 )
-returns shared_memory.knowledge_revisions
+returns lb_shared.knowledge_revisions
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  revision_row shared_memory.knowledge_revisions;
+  tenant_uuid uuid := lb_core.current_tenant();
+  revision_row lb_shared.knowledge_revisions;
 begin
   select * into revision_row
-  from shared_memory.knowledge_revisions
+  from lb_shared.knowledge_revisions
   where id = p_revision_id
     and entity_id = p_entity_id
     and tenant_id = tenant_uuid;
@@ -364,13 +364,13 @@ begin
     raise exception 'knowledge revision not found for tenant';
   end if;
 
-  update shared_memory.knowledge_revisions
+  update lb_shared.knowledge_revisions
   set status = 'published',
       approved_by_agent = p_actor_dpr_id,
       published_at = now()
   where id = p_revision_id;
 
-  update shared_memory.knowledge_entities
+  update lb_shared.knowledge_entities
   set status = 'published',
       approved_by_agent = p_actor_dpr_id,
       published_revision_id = p_revision_id,
@@ -378,7 +378,7 @@ begin
   where id = p_entity_id
     and tenant_id = tenant_uuid;
 
-  insert into shared_memory.persona_revision_audit (
+  insert into lb_shared.persona_revision_audit (
     tenant_id,
     entity_id,
     revision_id,
@@ -397,32 +397,32 @@ begin
   );
 
   select * into revision_row
-  from shared_memory.knowledge_revisions
+  from lb_shared.knowledge_revisions
   where id = p_revision_id;
 
   return revision_row;
 end;
 $$;
 
-create or replace function shared_memory.rollback_knowledge_entity(
+create or replace function lb_shared.rollback_knowledge_entity(
   p_entity_id uuid,
   p_target_revision_id uuid,
   p_actor_dpr_id text,
   p_reason text
 )
-returns shared_memory.knowledge_revisions
+returns lb_shared.knowledge_revisions
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  target_revision shared_memory.knowledge_revisions;
-  rollback_revision shared_memory.knowledge_revisions;
+  tenant_uuid uuid := lb_core.current_tenant();
+  target_revision lb_shared.knowledge_revisions;
+  rollback_revision lb_shared.knowledge_revisions;
   next_revision integer;
 begin
   select * into target_revision
-  from shared_memory.knowledge_revisions
+  from lb_shared.knowledge_revisions
   where id = p_target_revision_id
     and entity_id = p_entity_id
     and tenant_id = tenant_uuid;
@@ -433,11 +433,11 @@ begin
 
   select coalesce(max(revision_number), 0) + 1
   into next_revision
-  from shared_memory.knowledge_revisions
+  from lb_shared.knowledge_revisions
   where entity_id = p_entity_id
     and tenant_id = tenant_uuid;
 
-  insert into shared_memory.knowledge_revisions (
+  insert into lb_shared.knowledge_revisions (
     tenant_id,
     entity_id,
     revision_number,
@@ -464,7 +464,7 @@ begin
   )
   returning * into rollback_revision;
 
-  update shared_memory.knowledge_entities
+  update lb_shared.knowledge_entities
   set status = 'published',
       approved_by_agent = p_actor_dpr_id,
       published_revision_id = rollback_revision.id,
@@ -472,7 +472,7 @@ begin
   where id = p_entity_id
     and tenant_id = tenant_uuid;
 
-  insert into shared_memory.persona_revision_audit (
+  insert into lb_shared.persona_revision_audit (
     tenant_id,
     entity_id,
     revision_id,
@@ -494,7 +494,7 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.upsert_persona_compiled_bundle(
+create or replace function lb_shared.upsert_persona_compiled_bundle(
   p_dpr_id text,
   p_source_revision_ids uuid[],
   p_bundle jsonb,
@@ -502,16 +502,16 @@ create or replace function shared_memory.upsert_persona_compiled_bundle(
   p_created_by_agent text,
   p_published_at timestamptz default now()
 )
-returns shared_memory.persona_compiled_bundles
+returns lb_shared.persona_compiled_bundles
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  bundle_row shared_memory.persona_compiled_bundles;
+  tenant_uuid uuid := lb_core.current_tenant();
+  bundle_row lb_shared.persona_compiled_bundles;
 begin
-  insert into shared_memory.persona_compiled_bundles (
+  insert into lb_shared.persona_compiled_bundles (
     tenant_id,
     dpr_id,
     source_revision_ids,
@@ -540,23 +540,23 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.get_latest_persona_bundle(
+create or replace function lb_shared.get_latest_persona_bundle(
   p_dpr_id text
 )
-returns shared_memory.persona_compiled_bundles
+returns lb_shared.persona_compiled_bundles
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
   select pcb.*
-  from shared_memory.persona_compiled_bundles pcb
-  where pcb.tenant_id = core.current_tenant()
+  from lb_shared.persona_compiled_bundles pcb
+  where pcb.tenant_id = lb_core.current_tenant()
     and pcb.dpr_id = p_dpr_id
   order by pcb.created_at desc
   limit 1;
 $$;
 
-create or replace function shared_memory.upsert_persona_agent_sync_state(
+create or replace function lb_shared.upsert_persona_agent_sync_state(
   p_dpr_id text,
   p_expected_revision_hash text,
   p_acknowledged_revision_hash text,
@@ -566,16 +566,16 @@ create or replace function shared_memory.upsert_persona_agent_sync_state(
   p_last_sync_at timestamptz,
   p_last_ack_at timestamptz
 )
-returns shared_memory.persona_agent_sync_state
+returns lb_shared.persona_agent_sync_state
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  state_row shared_memory.persona_agent_sync_state;
+  tenant_uuid uuid := lb_core.current_tenant();
+  state_row lb_shared.persona_agent_sync_state;
 begin
-  insert into shared_memory.persona_agent_sync_state (
+  insert into lb_shared.persona_agent_sync_state (
     tenant_id,
     dpr_id,
     expected_revision_hash,
@@ -600,13 +600,13 @@ begin
   )
   on conflict (tenant_id, dpr_id)
   do update set
-    expected_revision_hash = coalesce(excluded.expected_revision_hash, shared_memory.persona_agent_sync_state.expected_revision_hash),
-    acknowledged_revision_hash = coalesce(excluded.acknowledged_revision_hash, shared_memory.persona_agent_sync_state.acknowledged_revision_hash),
-    policy_package = coalesce(excluded.policy_package, shared_memory.persona_agent_sync_state.policy_package),
+    expected_revision_hash = coalesce(excluded.expected_revision_hash, lb_shared.persona_agent_sync_state.expected_revision_hash),
+    acknowledged_revision_hash = coalesce(excluded.acknowledged_revision_hash, lb_shared.persona_agent_sync_state.acknowledged_revision_hash),
+    policy_package = coalesce(excluded.policy_package, lb_shared.persona_agent_sync_state.policy_package),
     sync_status = excluded.sync_status,
     sync_metadata = excluded.sync_metadata,
-    last_sync_at = coalesce(excluded.last_sync_at, shared_memory.persona_agent_sync_state.last_sync_at),
-    last_ack_at = coalesce(excluded.last_ack_at, shared_memory.persona_agent_sync_state.last_ack_at),
+    last_sync_at = coalesce(excluded.last_sync_at, lb_shared.persona_agent_sync_state.last_sync_at),
+    last_ack_at = coalesce(excluded.last_ack_at, lb_shared.persona_agent_sync_state.last_ack_at),
     updated_at = now()
   returning * into state_row;
 
@@ -614,7 +614,7 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.log_policy_decision(
+create or replace function lb_shared.log_policy_decision(
   p_run_id text,
   p_task_id text,
   p_dpr_id text,
@@ -626,16 +626,16 @@ create or replace function shared_memory.log_policy_decision(
   p_data_sensitivity text,
   p_metadata jsonb
 )
-returns shared_memory.policy_decisions
+returns lb_shared.policy_decisions
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  decision_row shared_memory.policy_decisions;
+  tenant_uuid uuid := lb_core.current_tenant();
+  decision_row lb_shared.policy_decisions;
 begin
-  insert into shared_memory.policy_decisions (
+  insert into lb_shared.policy_decisions (
     tenant_id,
     run_id,
     task_id,
@@ -666,7 +666,7 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.set_kill_switch_state(
+create or replace function lb_shared.set_kill_switch_state(
   p_scope text,
   p_target_key text,
   p_state text,
@@ -674,17 +674,17 @@ create or replace function shared_memory.set_kill_switch_state(
   p_actor_dpr_id text,
   p_metadata jsonb
 )
-returns shared_memory.kill_switch_states
+returns lb_shared.kill_switch_states
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  switch_row shared_memory.kill_switch_states;
+  tenant_uuid uuid := lb_core.current_tenant();
+  switch_row lb_shared.kill_switch_states;
 begin
   if p_state = 'active' then
-    update shared_memory.kill_switch_states
+    update lb_shared.kill_switch_states
     set state = 'released'
     where tenant_id = tenant_uuid
       and scope = p_scope
@@ -692,7 +692,7 @@ begin
       and state = 'active';
   end if;
 
-  insert into shared_memory.kill_switch_states (
+  insert into lb_shared.kill_switch_states (
     tenant_id,
     scope,
     target_key,
@@ -726,13 +726,13 @@ create or replace function public.create_knowledge_entity(
   p_created_by_agent text,
   p_metadata jsonb
 )
-returns shared_memory.knowledge_entities
+returns lb_shared.knowledge_entities
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.create_knowledge_entity(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.create_knowledge_entity(
     p_entity_kind,
     p_content_kind,
     p_scope_kind,
@@ -754,13 +754,13 @@ create or replace function public.create_knowledge_revision(
   p_created_by_agent text,
   p_rolled_back_from_revision_id uuid default null
 )
-returns shared_memory.knowledge_revisions
+returns lb_shared.knowledge_revisions
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.create_knowledge_revision(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.create_knowledge_revision(
     p_entity_id,
     p_status,
     p_body,
@@ -778,13 +778,13 @@ create or replace function public.publish_knowledge_revision(
   p_actor_dpr_id text,
   p_reason text default null
 )
-returns shared_memory.knowledge_revisions
+returns lb_shared.knowledge_revisions
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.publish_knowledge_revision(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.publish_knowledge_revision(
     p_entity_id,
     p_revision_id,
     p_actor_dpr_id,
@@ -799,13 +799,13 @@ create or replace function public.rollback_knowledge_entity(
   p_actor_dpr_id text,
   p_reason text
 )
-returns shared_memory.knowledge_revisions
+returns lb_shared.knowledge_revisions
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.rollback_knowledge_entity(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.rollback_knowledge_entity(
     p_entity_id,
     p_target_revision_id,
     p_actor_dpr_id,
@@ -817,14 +817,14 @@ create or replace function public.list_knowledge_entities(
   p_tenant uuid,
   p_entity_kind text default null
 )
-returns setof shared_memory.knowledge_entities
+returns setof lb_shared.knowledge_entities
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
+  select lb_core.set_tenant_context(p_tenant);
   select e.*
-  from shared_memory.knowledge_entities e
+  from lb_shared.knowledge_entities e
   where e.tenant_id = p_tenant
     and (p_entity_kind is null or e.entity_kind = p_entity_kind)
   order by e.updated_at desc;
@@ -834,14 +834,14 @@ create or replace function public.list_knowledge_revisions(
   p_tenant uuid,
   p_entity_id uuid default null
 )
-returns setof shared_memory.knowledge_revisions
+returns setof lb_shared.knowledge_revisions
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
+  select lb_core.set_tenant_context(p_tenant);
   select r.*
-  from shared_memory.knowledge_revisions r
+  from lb_shared.knowledge_revisions r
   where r.tenant_id = p_tenant
     and (p_entity_id is null or r.entity_id = p_entity_id)
   order by r.created_at desc;
@@ -856,13 +856,13 @@ create or replace function public.upsert_persona_compiled_bundle(
   p_created_by_agent text,
   p_published_at timestamptz default now()
 )
-returns shared_memory.persona_compiled_bundles
+returns lb_shared.persona_compiled_bundles
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.upsert_persona_compiled_bundle(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.upsert_persona_compiled_bundle(
     p_dpr_id,
     p_source_revision_ids,
     p_bundle,
@@ -876,13 +876,13 @@ create or replace function public.get_latest_persona_bundle(
   p_tenant uuid,
   p_dpr_id text
 )
-returns shared_memory.persona_compiled_bundles
+returns lb_shared.persona_compiled_bundles
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.get_latest_persona_bundle(p_dpr_id);
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.get_latest_persona_bundle(p_dpr_id);
 $$;
 
 create or replace function public.upsert_persona_agent_sync_state(
@@ -896,13 +896,13 @@ create or replace function public.upsert_persona_agent_sync_state(
   p_last_sync_at timestamptz,
   p_last_ack_at timestamptz
 )
-returns shared_memory.persona_agent_sync_state
+returns lb_shared.persona_agent_sync_state
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.upsert_persona_agent_sync_state(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.upsert_persona_agent_sync_state(
     p_dpr_id,
     p_expected_revision_hash,
     p_acknowledged_revision_hash,
@@ -918,14 +918,14 @@ create or replace function public.list_persona_agent_sync_state(
   p_tenant uuid,
   p_dpr_id text default null
 )
-returns setof shared_memory.persona_agent_sync_state
+returns setof lb_shared.persona_agent_sync_state
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
+  select lb_core.set_tenant_context(p_tenant);
   select s.*
-  from shared_memory.persona_agent_sync_state s
+  from lb_shared.persona_agent_sync_state s
   where s.tenant_id = p_tenant
     and (p_dpr_id is null or s.dpr_id = p_dpr_id)
   order by s.updated_at desc;
@@ -935,14 +935,14 @@ create or replace function public.list_persona_revision_audit(
   p_tenant uuid,
   p_entity_id uuid default null
 )
-returns setof shared_memory.persona_revision_audit
+returns setof lb_shared.persona_revision_audit
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
+  select lb_core.set_tenant_context(p_tenant);
   select a.*
-  from shared_memory.persona_revision_audit a
+  from lb_shared.persona_revision_audit a
   where a.tenant_id = p_tenant
     and (p_entity_id is null or a.entity_id = p_entity_id)
   order by a.created_at desc;
@@ -961,13 +961,13 @@ create or replace function public.log_policy_decision(
   p_data_sensitivity text,
   p_metadata jsonb
 )
-returns shared_memory.policy_decisions
+returns lb_shared.policy_decisions
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.log_policy_decision(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.log_policy_decision(
     p_run_id,
     p_task_id,
     p_dpr_id,
@@ -990,13 +990,13 @@ create or replace function public.set_kill_switch_state(
   p_actor_dpr_id text,
   p_metadata jsonb
 )
-returns shared_memory.kill_switch_states
+returns lb_shared.kill_switch_states
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.set_kill_switch_state(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.set_kill_switch_state(
     p_scope,
     p_target_key,
     p_state,
@@ -1006,15 +1006,15 @@ as $$
   );
 $$;
 
-grant execute on function shared_memory.create_knowledge_entity(text, text, text, text, text, text, text, jsonb) to service_role;
-grant execute on function shared_memory.create_knowledge_revision(uuid, text, text, jsonb, text, text, uuid) to service_role;
-grant execute on function shared_memory.publish_knowledge_revision(uuid, uuid, text, text) to service_role;
-grant execute on function shared_memory.rollback_knowledge_entity(uuid, uuid, text, text) to service_role;
-grant execute on function shared_memory.upsert_persona_compiled_bundle(text, uuid[], jsonb, text, text, timestamptz) to service_role;
-grant execute on function shared_memory.get_latest_persona_bundle(text) to service_role;
-grant execute on function shared_memory.upsert_persona_agent_sync_state(text, text, text, text, text, jsonb, timestamptz, timestamptz) to service_role;
-grant execute on function shared_memory.log_policy_decision(text, text, text, text, text, text, text, text, text, jsonb) to service_role;
-grant execute on function shared_memory.set_kill_switch_state(text, text, text, text, text, jsonb) to service_role;
+grant execute on function lb_shared.create_knowledge_entity(text, text, text, text, text, text, text, jsonb) to service_role;
+grant execute on function lb_shared.create_knowledge_revision(uuid, text, text, jsonb, text, text, uuid) to service_role;
+grant execute on function lb_shared.publish_knowledge_revision(uuid, uuid, text, text) to service_role;
+grant execute on function lb_shared.rollback_knowledge_entity(uuid, uuid, text, text) to service_role;
+grant execute on function lb_shared.upsert_persona_compiled_bundle(text, uuid[], jsonb, text, text, timestamptz) to service_role;
+grant execute on function lb_shared.get_latest_persona_bundle(text) to service_role;
+grant execute on function lb_shared.upsert_persona_agent_sync_state(text, text, text, text, text, jsonb, timestamptz, timestamptz) to service_role;
+grant execute on function lb_shared.log_policy_decision(text, text, text, text, text, text, text, text, text, jsonb) to service_role;
+grant execute on function lb_shared.set_kill_switch_state(text, text, text, text, text, jsonb) to service_role;
 
 grant execute on function public.create_knowledge_entity(uuid, text, text, text, text, text, text, text, jsonb) to service_role;
 grant execute on function public.create_knowledge_revision(uuid, uuid, text, text, jsonb, text, text, uuid) to service_role;

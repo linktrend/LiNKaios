@@ -17,7 +17,7 @@
 ## Data plane
 
 - [ ] LiNKbrain migration applied
-- [ ] `core.tenants` seeded with AIOS internal tenant
+- [ ] `lb_core.tenants` seeded with AIOS internal tenant
 - [ ] RLS active on shared/scratch tables
 - [ ] RPC-only access pattern enforced
 

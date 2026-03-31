@@ -144,7 +144,7 @@ Actions:
    - `run_id = LT-ALPHA-001` (or a new approved run ID)
    - `dpr_id = INT-MNG-260311-0001-LISA`
 2. Capture both success and security exception paths.
-3. Query and export audit evidence from `shared_memory.audit_runs` (via RPC or SQL).
+3. Query and export audit evidence from `lb_shared.audit_runs` (via RPC or SQL).
 4. Produce acceptance artifact containing:
    - mission payload
    - status transitions
@@ -187,7 +187,7 @@ Phase 2 includes:
 
 - Expand LiNKboard from optional call to required structured deliberation stage.
 - Define strategy prompt templates and decision schemas.
-- Persist strategic outputs to `shared_memory.proposals` and mission metadata.
+- Persist strategic outputs to `lb_shared.proposals` and mission metadata.
 
 ### Workstream P2-B: Reliability + self-healing
 
@@ -238,7 +238,7 @@ For the next operator/Codex instance, run in this order:
 4. Verify GSM secrets/versions/permissions in GCP.
 5. Verify canonical tenant row in Supabase.
 6. Run final Workstream 9 acceptance on canonical tenant ID.
-7. Archive evidence in docs and/or `shared_memory.audit_runs` references.
+7. Archive evidence in docs and/or `lb_shared.audit_runs` references.
 
 ## 7) Reporting template for completion
 

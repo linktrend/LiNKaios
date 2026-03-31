@@ -4,11 +4,11 @@
 create extension if not exists vector;
 create extension if not exists pgcrypto;
 
-create schema if not exists core;
-create schema if not exists shared_memory;
-create schema if not exists scratch_memory;
+create schema if not exists lb_core;
+create schema if not exists lb_shared;
+create schema if not exists lb_scratch;
 
-create or replace function core.current_tenant()
+create or replace function lb_core.current_tenant()
 returns uuid
 language plpgsql
 stable
@@ -27,18 +27,18 @@ exception
 end;
 $$;
 
-create or replace function core.set_tenant_context(p_tenant uuid)
+create or replace function lb_core.set_tenant_context(p_tenant uuid)
 returns void
 language plpgsql
 security definer
-set search_path = public, core
+set search_path = lb_core, public
 as $$
 begin
   perform set_config('app.current_tenant', p_tenant::text, true);
 end;
 $$;
 
-create table if not exists core.tenants (
+create table if not exists lb_core.tenants (
   id uuid primary key default gen_random_uuid(),
   venture_name text not null unique,
   slug text not null unique,
@@ -47,7 +47,7 @@ create table if not exists core.tenants (
   updated_at timestamptz not null default now()
 );
 
-insert into core.tenants (id, venture_name, slug, status)
+insert into lb_core.tenants (id, venture_name, slug, status)
 values (
   '00000000-0000-0000-0000-000000000001',
   'LiNKtrend AIOS Internal',
@@ -60,11 +60,11 @@ on conflict (id) do update set
   status = excluded.status,
   updated_at = now();
 
-create table if not exists shared_memory.missions (
+create table if not exists lb_shared.missions (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   mission_key text not null,
-  parent_mission_id uuid references shared_memory.missions(id) on delete set null,
+  parent_mission_id uuid references lb_shared.missions(id) on delete set null,
   goal text not null,
   status text not null check (status in ('active', 'paused', 'handover_pending', 'archived')),
   metadata jsonb not null default '{}'::jsonb,
@@ -75,9 +75,9 @@ create table if not exists shared_memory.missions (
   unique (tenant_id, mission_key)
 );
 
-create table if not exists shared_memory.policies (
+create table if not exists lb_shared.policies (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   title text not null,
   policy_body text not null,
   policy_version text not null,
@@ -88,9 +88,9 @@ create table if not exists shared_memory.policies (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists shared_memory.proposals (
+create table if not exists lb_shared.proposals (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   proposal_key text not null,
   title text not null,
   decision text not null,
@@ -105,9 +105,9 @@ create table if not exists shared_memory.proposals (
   unique (tenant_id, proposal_key)
 );
 
-create table if not exists shared_memory.lessons (
+create table if not exists lb_shared.lessons (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   lesson_title text not null,
   lesson_body text not null,
   source_run_id text not null,
@@ -120,9 +120,9 @@ create table if not exists shared_memory.lessons (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists shared_memory.audit_runs (
+create table if not exists lb_shared.audit_runs (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   run_id text not null,
   task_id text not null,
   dpr_id text not null,
@@ -134,9 +134,9 @@ create table if not exists shared_memory.audit_runs (
   unique (tenant_id, run_id, task_id, dpr_id)
 );
 
-create table if not exists scratch_memory.entries (
+create table if not exists lb_scratch.entries (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references core.tenants(id) on delete cascade,
+  tenant_id uuid not null references lb_core.tenants(id) on delete cascade,
   run_id text not null,
   agent_id text not null,
   entry_type text not null,
@@ -149,67 +149,67 @@ create table if not exists scratch_memory.entries (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists idx_missions_tenant on shared_memory.missions (tenant_id);
-create index if not exists idx_policies_tenant on shared_memory.policies (tenant_id);
-create index if not exists idx_proposals_tenant on shared_memory.proposals (tenant_id);
-create index if not exists idx_lessons_tenant on shared_memory.lessons (tenant_id);
-create index if not exists idx_audit_runs_tenant on shared_memory.audit_runs (tenant_id);
-create index if not exists idx_scratch_entries_tenant on scratch_memory.entries (tenant_id);
+create index if not exists idx_missions_tenant on lb_shared.missions (tenant_id);
+create index if not exists idx_policies_tenant on lb_shared.policies (tenant_id);
+create index if not exists idx_proposals_tenant on lb_shared.proposals (tenant_id);
+create index if not exists idx_lessons_tenant on lb_shared.lessons (tenant_id);
+create index if not exists idx_audit_runs_tenant on lb_shared.audit_runs (tenant_id);
+create index if not exists idx_scratch_entries_tenant on lb_scratch.entries (tenant_id);
 
-create index if not exists idx_missions_embedding on shared_memory.missions using hnsw (embedding vector_cosine_ops);
-create index if not exists idx_policies_embedding on shared_memory.policies using hnsw (embedding vector_cosine_ops);
-create index if not exists idx_proposals_embedding on shared_memory.proposals using hnsw (embedding vector_cosine_ops);
-create index if not exists idx_lessons_embedding on shared_memory.lessons using hnsw (embedding vector_cosine_ops);
+create index if not exists idx_missions_embedding on lb_shared.missions using hnsw (embedding vector_cosine_ops);
+create index if not exists idx_policies_embedding on lb_shared.policies using hnsw (embedding vector_cosine_ops);
+create index if not exists idx_proposals_embedding on lb_shared.proposals using hnsw (embedding vector_cosine_ops);
+create index if not exists idx_lessons_embedding on lb_shared.lessons using hnsw (embedding vector_cosine_ops);
 
-alter table shared_memory.missions enable row level security;
-alter table shared_memory.policies enable row level security;
-alter table shared_memory.proposals enable row level security;
-alter table shared_memory.lessons enable row level security;
-alter table shared_memory.audit_runs enable row level security;
-alter table scratch_memory.entries enable row level security;
+alter table lb_shared.missions enable row level security;
+alter table lb_shared.policies enable row level security;
+alter table lb_shared.proposals enable row level security;
+alter table lb_shared.lessons enable row level security;
+alter table lb_shared.audit_runs enable row level security;
+alter table lb_scratch.entries enable row level security;
 
-create policy missions_tenant_policy on shared_memory.missions
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy missions_tenant_policy on lb_shared.missions
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy policies_tenant_policy on shared_memory.policies
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy policies_tenant_policy on lb_shared.policies
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy proposals_tenant_policy on shared_memory.proposals
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy proposals_tenant_policy on lb_shared.proposals
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy lessons_tenant_policy on shared_memory.lessons
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy lessons_tenant_policy on lb_shared.lessons
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy audit_runs_tenant_policy on shared_memory.audit_runs
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy audit_runs_tenant_policy on lb_shared.audit_runs
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
-create policy scratch_entries_tenant_policy on scratch_memory.entries
-  using (tenant_id = core.current_tenant())
-  with check (tenant_id = core.current_tenant());
+create policy scratch_entries_tenant_policy on lb_scratch.entries
+  using (tenant_id = lb_core.current_tenant())
+  with check (tenant_id = lb_core.current_tenant());
 
 -- Deny direct table access for runtime roles.
-revoke all on all tables in schema shared_memory from anon, authenticated, service_role;
-revoke all on all tables in schema scratch_memory from anon, authenticated, service_role;
+revoke all on all tables in schema lb_shared from anon, authenticated, service_role;
+revoke all on all tables in schema lb_scratch from anon, authenticated, service_role;
 
-create or replace function core.bootstrap_tenant(
+create or replace function lb_core.bootstrap_tenant(
   p_venture_name text,
   p_slug text,
   p_status text default 'active'
 )
-returns core.tenants
+returns lb_core.tenants
 language plpgsql
 security definer
-set search_path = public, core
+set search_path = lb_core, public
 as $$
 declare
-  tenant_row core.tenants;
+  tenant_row lb_core.tenants;
 begin
-  insert into core.tenants (venture_name, slug, status)
+  insert into lb_core.tenants (venture_name, slug, status)
   values (p_venture_name, p_slug, p_status)
   on conflict (slug) do update set
     venture_name = excluded.venture_name,
@@ -221,7 +221,7 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.upsert_mission(
+create or replace function lb_shared.upsert_mission(
   p_mission_key text,
   p_parent_mission_id uuid,
   p_goal text,
@@ -230,16 +230,16 @@ create or replace function shared_memory.upsert_mission(
   p_embedding vector(768),
   p_created_by_agent text
 )
-returns shared_memory.missions
+returns lb_shared.missions
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  mission_row shared_memory.missions;
+  tenant_uuid uuid := lb_core.current_tenant();
+  mission_row lb_shared.missions;
 begin
-  insert into shared_memory.missions (
+  insert into lb_shared.missions (
     tenant_id,
     mission_key,
     parent_mission_id,
@@ -284,13 +284,13 @@ create or replace function public.upsert_mission(
   p_embedding vector(768),
   p_created_by_agent text
 )
-returns shared_memory.missions
+returns lb_shared.missions
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.upsert_mission(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.upsert_mission(
     p_mission_key,
     p_parent_mission_id,
     p_goal,
@@ -301,7 +301,7 @@ as $$
   );
 $$;
 
-create or replace function scratch_memory.log_entry(
+create or replace function lb_scratch.log_entry(
   p_run_id text,
   p_agent_id text,
   p_entry_type text,
@@ -309,16 +309,16 @@ create or replace function scratch_memory.log_entry(
   p_confidence numeric,
   p_metadata jsonb
 )
-returns scratch_memory.entries
+returns lb_scratch.entries
 language plpgsql
 security definer
-set search_path = public, core, scratch_memory
+set search_path = lb_core, lb_scratch, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  entry_row scratch_memory.entries;
+  tenant_uuid uuid := lb_core.current_tenant();
+  entry_row lb_scratch.entries;
 begin
-  insert into scratch_memory.entries (
+  insert into lb_scratch.entries (
     tenant_id,
     run_id,
     agent_id,
@@ -340,23 +340,23 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.promote_scratch_to_lesson(
+create or replace function lb_shared.promote_scratch_to_lesson(
   p_entry_id uuid,
   p_lesson_title text,
   p_embedding vector(768)
 )
-returns shared_memory.lessons
+returns lb_shared.lessons
 language plpgsql
 security definer
-set search_path = public, core, shared_memory, scratch_memory
+set search_path = lb_core, lb_shared, lb_scratch, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  source_entry scratch_memory.entries;
-  lesson_row shared_memory.lessons;
+  tenant_uuid uuid := lb_core.current_tenant();
+  source_entry lb_scratch.entries;
+  lesson_row lb_shared.lessons;
 begin
   select * into source_entry
-  from scratch_memory.entries
+  from lb_scratch.entries
   where id = p_entry_id
     and tenant_id = tenant_uuid;
 
@@ -368,7 +368,7 @@ begin
     raise exception 'confidence below auto-promotion threshold';
   end if;
 
-  insert into shared_memory.lessons (
+  insert into lb_shared.lessons (
     tenant_id,
     lesson_title,
     lesson_body,
@@ -390,7 +390,7 @@ begin
     p_embedding
   ) returning * into lesson_row;
 
-  update scratch_memory.entries
+  update lb_scratch.entries
   set promoted = true,
       promotion_target = lesson_row.id::text,
       updated_at = now()
@@ -400,7 +400,7 @@ begin
 end;
 $$;
 
-create or replace function shared_memory.search_lessons(
+create or replace function lb_shared.search_lessons(
   p_query_embedding vector(768),
   p_match_count integer default 8
 )
@@ -414,7 +414,7 @@ returns table (
 )
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
   select
     l.id,
@@ -423,13 +423,13 @@ as $$
     l.lesson_body,
     l.confidence,
     1 - (l.embedding <=> p_query_embedding) as similarity
-  from shared_memory.lessons l
-  where l.tenant_id = core.current_tenant()
+  from lb_shared.lessons l
+  where l.tenant_id = lb_core.current_tenant()
   order by l.embedding <=> p_query_embedding
   limit greatest(p_match_count, 1);
 $$;
 
-create or replace function shared_memory.log_audit_run(
+create or replace function lb_shared.log_audit_run(
   p_run_id text,
   p_task_id text,
   p_dpr_id text,
@@ -438,16 +438,16 @@ create or replace function shared_memory.log_audit_run(
   p_command_log jsonb,
   p_details jsonb
 )
-returns shared_memory.audit_runs
+returns lb_shared.audit_runs
 language plpgsql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
 declare
-  tenant_uuid uuid := core.current_tenant();
-  run_row shared_memory.audit_runs;
+  tenant_uuid uuid := lb_core.current_tenant();
+  run_row lb_shared.audit_runs;
 begin
-  insert into shared_memory.audit_runs (
+  insert into lb_shared.audit_runs (
     tenant_id,
     run_id,
     task_id,
@@ -488,13 +488,13 @@ create or replace function public.log_audit_run(
   p_command_log jsonb,
   p_details jsonb
 )
-returns shared_memory.audit_runs
+returns lb_shared.audit_runs
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
-  select shared_memory.log_audit_run(
+  select lb_core.set_tenant_context(p_tenant);
+  select lb_shared.log_audit_run(
     p_run_id,
     p_task_id,
     p_dpr_id,
@@ -510,26 +510,26 @@ create or replace function public.bootstrap_tenant(
   p_slug text,
   p_status text default 'active'
 )
-returns core.tenants
+returns lb_core.tenants
 language sql
 security definer
-set search_path = public, core
+set search_path = lb_core, public
 as $$
-  select core.bootstrap_tenant(p_tenant_name, p_slug, p_status);
+  select lb_core.bootstrap_tenant(p_tenant_name, p_slug, p_status);
 $$;
 
 create or replace function public.list_audit_runs(
   p_tenant uuid,
   p_run_id text default null
 )
-returns setof shared_memory.audit_runs
+returns setof lb_shared.audit_runs
 language sql
 security definer
-set search_path = public, core, shared_memory
+set search_path = lb_core, lb_shared, public
 as $$
-  select core.set_tenant_context(p_tenant);
+  select lb_core.set_tenant_context(p_tenant);
   select ar.*
-  from shared_memory.audit_runs ar
+  from lb_shared.audit_runs ar
   where ar.tenant_id = p_tenant
     and (p_run_id is null or ar.run_id = p_run_id)
   order by ar.created_at desc;
@@ -539,20 +539,20 @@ create or replace function public.set_tenant_context(p_tenant uuid)
 returns void
 language sql
 security definer
-set search_path = public, core
+set search_path = lb_core, public
 as $$
-  select core.set_tenant_context(p_tenant);
+  select lb_core.set_tenant_context(p_tenant);
 $$;
 
-grant usage on schema core, shared_memory, scratch_memory to service_role;
-grant execute on function core.current_tenant() to service_role;
-grant execute on function core.set_tenant_context(uuid) to service_role;
-grant execute on function core.bootstrap_tenant(text, text, text) to service_role;
-grant execute on function shared_memory.upsert_mission(text, uuid, text, text, jsonb, vector, text) to service_role;
-grant execute on function scratch_memory.log_entry(text, text, text, text, numeric, jsonb) to service_role;
-grant execute on function shared_memory.promote_scratch_to_lesson(uuid, text, vector) to service_role;
-grant execute on function shared_memory.search_lessons(vector, integer) to service_role;
-grant execute on function shared_memory.log_audit_run(text, text, text, text, integer, jsonb, jsonb) to service_role;
+grant usage on schema lb_core, lb_shared, lb_scratch to service_role;
+grant execute on function lb_core.current_tenant() to service_role;
+grant execute on function lb_core.set_tenant_context(uuid) to service_role;
+grant execute on function lb_core.bootstrap_tenant(text, text, text) to service_role;
+grant execute on function lb_shared.upsert_mission(text, uuid, text, text, jsonb, vector, text) to service_role;
+grant execute on function lb_scratch.log_entry(text, text, text, text, numeric, jsonb) to service_role;
+grant execute on function lb_shared.promote_scratch_to_lesson(uuid, text, vector) to service_role;
+grant execute on function lb_shared.search_lessons(vector, integer) to service_role;
+grant execute on function lb_shared.log_audit_run(text, text, text, text, integer, jsonb, jsonb) to service_role;
 grant execute on function public.set_tenant_context(uuid) to service_role;
 grant execute on function public.upsert_mission(uuid, text, uuid, text, text, jsonb, vector, text) to service_role;
 grant execute on function public.log_audit_run(uuid, text, text, text, text, integer, jsonb, jsonb) to service_role;
