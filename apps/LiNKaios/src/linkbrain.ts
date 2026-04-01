@@ -130,7 +130,7 @@ export class LiNKbrainClient {
     runId: string;
     taskId: string;
     dprId: string;
-    embedding: number[];
+    embedding: number[] | null;
   }): Promise<void> {
     const { error } = await this.client.rpc("upsert_mission", {
       p_tenant: args.tenantId,

@@ -226,11 +226,17 @@ app.post("/missions/start", async (req, res) => {
       dprId: payload.dprId,
       goal: payload.goal
     });
-    const embedding = await embedText(
-      env.OLLAMA_EMBEDDING_URL,
-      env.OLLAMA_EMBEDDING_MODEL,
-      payload.goal
-    );
+    let embedding: number[] | null = null;
+    try {
+      embedding = await embedText(
+        env.OLLAMA_EMBEDDING_URL,
+        env.OLLAMA_EMBEDDING_MODEL,
+        payload.goal
+      );
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "unknown";
+      console.warn(`embedding_unavailable mission_id=${payload.missionId} reason=${reason}`);
+    }
 
     await studioBrain.upsertMission({
       tenantId: payload.tenantId,
