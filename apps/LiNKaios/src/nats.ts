@@ -149,7 +149,11 @@ export async function createAiosEventBus(natsUrl?: string): Promise<AiosEventBus
     return new NoopEventBus();
   }
 
-  const connection = await connect({ servers: natsUrl });
+  const connection = await connectWithRetry(natsUrl, {
+    attempts: 8,
+    connectTimeoutMs: 8000,
+    backoffMs: 1500
+  });
   const manager = await connection.jetstreamManager();
   const streamSubjects = await ensureCanonicalEventStream(manager, DEFAULT_STREAM_NAME);
   await ensureStreamSubjects(manager, DEFAULT_DLQ_STREAM_NAME, [DLQ_SUBJECT]);
@@ -162,6 +166,35 @@ export async function createAiosEventBus(natsUrl?: string): Promise<AiosEventBus
     streamSubjects,
     DEFAULT_DLQ_STREAM_NAME
   );
+}
+
+async function connectWithRetry(
+  natsUrl: string,
+  options: {
+    attempts: number;
+    connectTimeoutMs: number;
+    backoffMs: number;
+  }
+): Promise<NatsConnection> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= options.attempts; attempt += 1) {
+    try {
+      return await connect({
+        servers: natsUrl,
+        timeout: options.connectTimeoutMs,
+        waitOnFirstConnect: true,
+        maxReconnectAttempts: -1,
+        reconnectTimeWait: options.backoffMs
+      });
+    } catch (error) {
+      lastError = error;
+      if (attempt < options.attempts) {
+        await new Promise((resolve) => setTimeout(resolve, options.backoffMs));
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Unable to connect to NATS");
 }
 
 async function ensureCanonicalEventStream(

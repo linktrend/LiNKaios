@@ -1,7 +1,7 @@
 # LiNKaios/Paperclip Control Plane Operations (LiNKdroplet Admin)
 
 ## Bootstrap
-1. Prepare `.env.runtime` with non-secret config and GSM-resolved secrets.
+1. Prepare `.env.runtime` with non-secret config and GSM secret identifiers (`*_SECRET_NAME`) only.
 2. Ensure Tailscale is connected and firewall allows only intended ingress paths.
 3. Start control plane stack:
    - `docker compose -f infra/droplet-admin/control-plane/docker-compose.yml up -d --build`
@@ -17,7 +17,7 @@
 
 ## Rollback
 - Roll back by previous immutable image tag/SHA.
-- Restart with prior `.env.runtime` snapshot if config rollback is needed.
+- Restart with prior non-secret `.env.runtime` snapshot if config rollback is needed.
 - Validate health endpoints and run one smoke mission before reopening operator access.
 
 ## Mandatory post-deploy checks
