@@ -1,5 +1,8 @@
 # Unified Dev Test Runbook (LiNKaios + LiNKskills + LiNKautowork + Paperclip/OpenClaw/AgentZero)
 
+Owner: LiNKtrend Platform  
+Last updated: 2026-04-01
+
 Last updated: 2026-03-19
 
 ## Goal
