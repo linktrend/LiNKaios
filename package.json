@@ -18,7 +18,7 @@
   "pnpm": {
     "overrides": {
       "@tootallnate/once": "^3.0.1",
-      "path-to-regexp@<0.1.13": ">=0.1.13",
+      "path-to-regexp@<0.1.13": "0.1.13",
       "brace-expansion@>=2.0.0 <2.0.3": ">=2.0.3",
       "picomatch@>=4.0.0 <4.0.4": ">=4.0.4"
     }
