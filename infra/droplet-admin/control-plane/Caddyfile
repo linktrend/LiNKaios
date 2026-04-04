@@ -7,6 +7,8 @@
 
   @paperclip path /api/* /ws* /auth/* /inbox* /companies* /agents* /issues*
   @linkaios path /aios/* /health/linkaios
+  @linkaios_home path_regexp linkaios_home ^/[^/]+/home/?$
+  @root path /
 
   # Require authenticated session from oauth2-proxy before upstream forwarding.
   forward_auth oauth2-proxy:4180 {
@@ -21,6 +23,14 @@
   handle @linkaios {
     uri strip_prefix /aios
     reverse_proxy linkaios:4000
+  }
+
+  handle @linkaios_home {
+    reverse_proxy linkaios:4000
+  }
+
+  handle @root {
+    redir /LINA/home 302
   }
 
   handle {

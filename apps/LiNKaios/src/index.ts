@@ -33,6 +33,7 @@ import { createLiNKskillsBridge } from "./linkskills.js";
 import { createAiosEventBus } from "./nats.js";
 import { postSlackStatus, toSlackCard } from "./slack.js";
 import { registerPersonaControlRoutes } from "./persona-control.js";
+import { renderLiNKaiosHomePage } from "./home-page.js";
 
 const MissionEventRequestSchema = z.object({
   tenantId: z.string().uuid(),
@@ -169,6 +170,18 @@ app.get("/health", async (_req, res) => {
       timezone: env.CHAIRMAN_APPROVAL_TIMEZONE
     }
   });
+});
+
+app.get("/:companyPrefix/home", (req, res) => {
+  const companyPrefix = (req.params.companyPrefix ?? "").trim();
+  if (!companyPrefix) {
+    return res.status(400).type("text/plain").send("Missing company prefix");
+  }
+  const html = renderLiNKaiosHomePage({
+    companyPrefix,
+    host: req.get("host")
+  });
+  return res.status(200).type("html").send(html);
 });
 
 app.get("/agents/discovery", async (_req, res) => {
