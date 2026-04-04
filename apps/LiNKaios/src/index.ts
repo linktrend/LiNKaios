@@ -33,6 +33,7 @@ import { createLiNKskillsBridge } from "./linkskills.js";
 import { createAiosEventBus } from "./nats.js";
 import { postSlackStatus, toSlackCard } from "./slack.js";
 import { registerPersonaControlRoutes } from "./persona-control.js";
+import { renderLiNKaiosHomePage } from "./home-page.js";
 
 const MissionEventRequestSchema = z.object({
   tenantId: z.string().uuid(),
@@ -171,6 +172,18 @@ app.get("/health", async (_req, res) => {
   });
 });
 
+app.get("/:companyPrefix/home", (req, res) => {
+  const companyPrefix = (req.params.companyPrefix ?? "").trim();
+  if (!companyPrefix) {
+    return res.status(400).type("text/plain").send("Missing company prefix");
+  }
+  const html = renderLiNKaiosHomePage({
+    companyPrefix,
+    host: req.get("host")
+  });
+  return res.status(200).type("html").send(html);
+});
+
 app.get("/agents/discovery", async (_req, res) => {
   const roster = discoverInternalAgents();
   const agencyReadiness = evaluateAgencyReadiness();
@@ -226,11 +239,17 @@ app.post("/missions/start", async (req, res) => {
       dprId: payload.dprId,
       goal: payload.goal
     });
-    const embedding = await embedText(
-      env.OLLAMA_EMBEDDING_URL,
-      env.OLLAMA_EMBEDDING_MODEL,
-      payload.goal
-    );
+    let embedding: number[] | null = null;
+    try {
+      embedding = await embedText(
+        env.OLLAMA_EMBEDDING_URL,
+        env.OLLAMA_EMBEDDING_MODEL,
+        payload.goal
+      );
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "unknown";
+      console.warn(`embedding_unavailable mission_id=${payload.missionId} reason=${reason}`);
+    }
 
     await studioBrain.upsertMission({
       tenantId: payload.tenantId,

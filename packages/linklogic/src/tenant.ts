@@ -3,8 +3,8 @@ export function requireTenantContext(tenantId: string | undefined): string {
     throw new Error("Missing tenant context: app.current_tenant must be set");
   }
 
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  // Accept canonical UUID formatting, including the all-zero internal tenant UUID.
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   if (!uuidRegex.test(tenantId)) {
     throw new Error("Invalid tenant context: app.current_tenant must be a UUID");

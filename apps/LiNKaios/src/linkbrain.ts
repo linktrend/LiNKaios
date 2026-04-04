@@ -113,6 +113,23 @@ export type PersonaRevisionAuditRecord = {
   created_at: string;
 };
 
+export type AgentModelProfileRecord = {
+  id: string;
+  tenant_id: string;
+  dpr_id: string;
+  reasoning_model: string;
+  context_model: string;
+  execution_model: string;
+  review_model: string | null;
+  heartbeat_model: string | null;
+  dynamic_sequencing: boolean;
+  review_required: boolean;
+  max_review_loops: number;
+  policy_metadata: Json;
+  updated_by_agent: string;
+  updated_at: string;
+};
+
 export class LiNKbrainClient {
   private client;
 
@@ -130,7 +147,7 @@ export class LiNKbrainClient {
     runId: string;
     taskId: string;
     dprId: string;
-    embedding: number[];
+    embedding: number[] | null;
   }): Promise<void> {
     const { error } = await this.client.rpc("upsert_mission", {
       p_tenant: args.tenantId,
@@ -506,5 +523,61 @@ export class LiNKbrainClient {
     }
 
     return (data ?? []) as PersonaRevisionAuditRecord[];
+  }
+
+  async upsertAgentModelProfile(args: {
+    tenantId: string;
+    dprId: string;
+    reasoningModel: string;
+    contextModel: string;
+    executionModel: string;
+    reviewModel?: string;
+    heartbeatModel?: string;
+    dynamicSequencing: boolean;
+    reviewRequired: boolean;
+    maxReviewLoops: number;
+    policyMetadata?: Json;
+    updatedByAgent: string;
+  }): Promise<AgentModelProfileRecord> {
+    const { data, error } = await this.client.rpc("upsert_agent_model_profile", {
+      p_tenant: args.tenantId,
+      p_dpr_id: args.dprId,
+      p_reasoning_model: args.reasoningModel,
+      p_context_model: args.contextModel,
+      p_execution_model: args.executionModel,
+      p_review_model: args.reviewModel ?? null,
+      p_heartbeat_model: args.heartbeatModel ?? null,
+      p_dynamic_sequencing: args.dynamicSequencing,
+      p_review_required: args.reviewRequired,
+      p_max_review_loops: args.maxReviewLoops,
+      p_policy_metadata: args.policyMetadata ?? {},
+      p_updated_by_agent: args.updatedByAgent
+    });
+
+    if (error) {
+      throw new Error(`Failed to upsert agent model profile: ${error.message}`);
+    }
+
+    return data as AgentModelProfileRecord;
+  }
+
+  async getAgentModelProfile(args: {
+    tenantId: string;
+    dprId: string;
+  }): Promise<AgentModelProfileRecord | null> {
+    const { data, error } = await this.client.rpc("get_agent_model_profile", {
+      p_tenant: args.tenantId,
+      p_dpr_id: args.dprId
+    });
+
+    if (error) {
+      throw new Error(`Failed to fetch agent model profile: ${error.message}`);
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return data as AgentModelProfileRecord;
   }
 }

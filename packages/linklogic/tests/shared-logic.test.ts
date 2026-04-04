@@ -24,6 +24,9 @@ describe("linklogic", () => {
   it("validates tenant context UUID", () => {
     expect(() => requireTenantContext(undefined)).toThrow(/Missing tenant context/);
     expect(() => requireTenantContext("not-a-uuid")).toThrow(/Invalid tenant context/);
+    expect(requireTenantContext("00000000-0000-0000-0000-000000000001")).toBe(
+      "00000000-0000-0000-0000-000000000001"
+    );
     expect(requireTenantContext("5bb916ec-8f53-4424-b9fa-9969f1ab384f")).toBe(
       "5bb916ec-8f53-4424-b9fa-9969f1ab384f"
     );

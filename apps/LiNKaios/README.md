@@ -40,6 +40,9 @@ Canonical internal tenant UUID for MVO fixtures/examples:
 - `POST /persona/migration/import-local`
 - `POST /persona/migration/compile-all`
 - `POST /persona/migration/apply-v1`
+- `GET /orchestration/model-profiles?tenantId=<uuid>&dprId=<id>`
+- `POST /orchestration/model-profiles/upsert`
+- `POST /orchestration/plan`
 - `POST /policies/evaluate`
 - `POST /policies/killswitch`
 
@@ -55,6 +58,7 @@ Canonical internal tenant UUID for MVO fixtures/examples:
 - Approval events route to approvals webhook first, fallback to operations webhook.
 - Non-approval operational events route to operations webhook.
 - Persona lifecycle actions emit canonical `aios.*` progress/security/approval events.
+- Lisa-only rollout supports function-specific model roles in LiNKbrain (`reasoning_model`, `context_model`, `execution_model`) with dynamic phase planning.
 - Ritual support surfaces:
   - 08:00 Asia/Taipei strategic window.
   - 10:45 Asia/Taipei operational pulse window.

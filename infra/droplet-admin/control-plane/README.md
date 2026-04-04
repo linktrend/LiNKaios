@@ -10,7 +10,7 @@ This bundle runs Paperclip + LiNKaios behind a Supabase-authenticated gateway.
 - OAuth2 Proxy enforces Supabase-backed OIDC login + MFA policy.
 
 ## Runtime env contract
-- `.env.runtime` must contain only non-secret values plus resolved secret values sourced from GSM at deployment time.
+- `.env.runtime` must contain only non-secret values and GSM secret identifiers (`*_SECRET_NAME`).
 - Repo `.env` files must not include raw secrets.
 
 ## Required env keys

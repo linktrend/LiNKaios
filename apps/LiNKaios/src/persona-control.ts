@@ -12,6 +12,7 @@ import {
   type AgentLane
 } from "./agents.js";
 import {
+  type AgentModelProfileRecord,
   type KillSwitchStateRecord,
   type KnowledgeEntityRecord,
   type KnowledgeRevisionRecord,
@@ -19,6 +20,11 @@ import {
   type PersonaCompiledBundleRecord,
   type PolicyDecisionRecord
 } from "./linkbrain.js";
+import {
+  AgentModelProfileSchema,
+  TaskOrchestrationInputSchema,
+  buildDynamicOrchestrationPlan
+} from "./orchestration-policy.js";
 
 type PersonaDeps = {
   app: express.Express;
@@ -183,6 +189,28 @@ const KILLSWITCH_SCHEMA = z.object({
   metadata: z.record(z.unknown()).default({})
 });
 
+const MODEL_PROFILE_UPSERT_SCHEMA = AgentModelProfileSchema.extend({
+  actorDprId: z.string().min(3)
+});
+
+const MODEL_PROFILE_QUERY_SCHEMA = z.object({
+  tenantId: z.string().uuid(),
+  dprId: z.string().min(3)
+});
+
+const ORCHESTRATION_PLAN_SCHEMA = z.object({
+  tenantId: z.string().uuid(),
+  dprId: z.string().min(3),
+  runId: z.string().min(3),
+  taskId: z.string().min(3),
+  missionId: z.string().uuid().optional(),
+  taskPrompt: z.string().min(1),
+  contextRefs: z.array(z.string().min(1)).default([]),
+  metadata: z.record(z.unknown()).default({})
+});
+
+const LISA_DPR_ID = "INT-MNG-260311-0001-LISA";
+
 function normalizeRoleKey(role: string | null): string {
   return (role ?? "").trim().toLowerCase().replace(/\s+/g, "_");
 }
@@ -332,6 +360,22 @@ function policyPackageLabel(raw?: string): string {
   const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
   const dd = String(now.getUTCDate()).padStart(2, "0");
   return `agent_persona_policy_${yy}${mm}${dd}`;
+}
+
+function toRuntimeModelProfile(record: AgentModelProfileRecord) {
+  return AgentModelProfileSchema.parse({
+    tenantId: record.tenant_id,
+    dprId: record.dpr_id,
+    reasoningModel: record.reasoning_model,
+    contextModel: record.context_model,
+    executionModel: record.execution_model,
+    reviewModel: record.review_model ?? undefined,
+    heartbeatModel: record.heartbeat_model ?? undefined,
+    dynamicSequencing: record.dynamic_sequencing,
+    reviewRequired: record.review_required,
+    maxReviewLoops: record.max_review_loops,
+    policyMetadata: record.policy_metadata ?? {}
+  });
 }
 
 function resolveLayeredSections(args: {
@@ -1604,6 +1648,166 @@ export function registerPersonaControlRoutes(deps: PersonaDeps): void {
       return res.status(500).json({
         accepted: false,
         reason: error instanceof Error ? error.message : "Unable to apply v1 persona seed"
+      });
+    }
+  });
+
+  app.post("/orchestration/model-profiles/upsert", async (req, res) => {
+    const parsed = MODEL_PROFILE_UPSERT_SCHEMA.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ accepted: false, reason: parsed.error.flatten() });
+    }
+
+    if (parsed.data.dprId !== LISA_DPR_ID) {
+      return res.status(409).json({
+        accepted: false,
+        reason: `Lisa-only rollout: only ${LISA_DPR_ID} can be configured at this stage`
+      });
+    }
+
+    try {
+      const stored = await studioBrain.upsertAgentModelProfile({
+        tenantId: parsed.data.tenantId,
+        dprId: parsed.data.dprId,
+        reasoningModel: parsed.data.reasoningModel,
+        contextModel: parsed.data.contextModel,
+        executionModel: parsed.data.executionModel,
+        reviewModel: parsed.data.reviewModel,
+        heartbeatModel: parsed.data.heartbeatModel,
+        dynamicSequencing: parsed.data.dynamicSequencing,
+        reviewRequired: parsed.data.reviewRequired,
+        maxReviewLoops: parsed.data.maxReviewLoops,
+        policyMetadata: parsed.data.policyMetadata,
+        updatedByAgent: parsed.data.actorDprId
+      });
+
+      await emitEvent(
+        createEvent({
+          eventType: "aios.task.progress",
+          tenantId: parsed.data.tenantId,
+          missionId: randomMissionId(),
+          runId: `model-profile-${Date.now()}`,
+          taskId: `upsert-${parsed.data.dprId.toLowerCase()}`,
+          fromDprId: parsed.data.actorDprId,
+          toDprId: parsed.data.dprId,
+          payload: {
+            summary: "Agent model profile updated",
+            detail: `reasoning=${stored.reasoning_model} context=${stored.context_model} execution=${stored.execution_model}`,
+            dpr_id: stored.dpr_id
+          }
+        })
+      );
+
+      return res.status(202).json({
+        accepted: true,
+        profile: stored
+      });
+    } catch (error) {
+      return res.status(500).json({
+        accepted: false,
+        reason: error instanceof Error ? error.message : "Unable to upsert model profile"
+      });
+    }
+  });
+
+  app.get("/orchestration/model-profiles", async (req, res) => {
+    const parsed = MODEL_PROFILE_QUERY_SCHEMA.safeParse({
+      tenantId: typeof req.query.tenantId === "string" ? req.query.tenantId : defaultTenantId,
+      dprId: typeof req.query.dprId === "string" ? req.query.dprId : undefined
+    });
+    if (!parsed.success) {
+      return res.status(400).json({ accepted: false, reason: parsed.error.flatten() });
+    }
+
+    if (parsed.data.dprId !== LISA_DPR_ID) {
+      return res.status(409).json({
+        accepted: false,
+        reason: `Lisa-only rollout: only ${LISA_DPR_ID} is supported now`
+      });
+    }
+
+    try {
+      const profile = await studioBrain.getAgentModelProfile({
+        tenantId: parsed.data.tenantId,
+        dprId: parsed.data.dprId
+      });
+
+      return res.json({
+        accepted: true,
+        profile
+      });
+    } catch (error) {
+      return res.status(500).json({
+        accepted: false,
+        reason: error instanceof Error ? error.message : "Unable to fetch model profile"
+      });
+    }
+  });
+
+  app.post("/orchestration/plan", async (req, res) => {
+    const parsed = ORCHESTRATION_PLAN_SCHEMA.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ accepted: false, reason: parsed.error.flatten() });
+    }
+
+    if (parsed.data.dprId !== LISA_DPR_ID) {
+      return res.status(409).json({
+        accepted: false,
+        reason: `Lisa-only rollout: only ${LISA_DPR_ID} is supported now`
+      });
+    }
+
+    try {
+      const stored = await studioBrain.getAgentModelProfile({
+        tenantId: parsed.data.tenantId,
+        dprId: parsed.data.dprId
+      });
+
+      if (!stored) {
+        return res.status(404).json({
+          accepted: false,
+          reason: "No model profile found for agent. Configure it via /orchestration/model-profiles/upsert."
+        });
+      }
+
+      const profile = toRuntimeModelProfile(stored);
+      const taskInput = TaskOrchestrationInputSchema.parse({
+        taskPrompt: parsed.data.taskPrompt,
+        contextRefs: parsed.data.contextRefs,
+        metadata: parsed.data.metadata
+      });
+      const plan = buildDynamicOrchestrationPlan(profile, taskInput);
+
+      await studioBrain.logPolicyDecision({
+        tenantId: parsed.data.tenantId,
+        runId: parsed.data.runId,
+        taskId: parsed.data.taskId,
+        dprId: parsed.data.dprId,
+        policyPackage: "agent_persona_policy_orchestration_lisa",
+        decision: "allow",
+        reason: "Dynamic model-role orchestration plan generated",
+        destination: "local_orchestrator",
+        toolName: "model_role_router",
+        dataSensitivity: "low",
+        metadata: {
+          sequence: plan.sequence.map((phase) => ({ role: phase.role, model: phase.model })),
+          include_context_phase: plan.decision.includeContextPhase
+        }
+      });
+
+      return res.status(202).json({
+        accepted: true,
+        tenantId: parsed.data.tenantId,
+        dprId: parsed.data.dprId,
+        missionId: parsed.data.missionId ?? null,
+        runId: parsed.data.runId,
+        taskId: parsed.data.taskId,
+        plan
+      });
+    } catch (error) {
+      return res.status(500).json({
+        accepted: false,
+        reason: error instanceof Error ? error.message : "Unable to generate orchestration plan"
       });
     }
   });
