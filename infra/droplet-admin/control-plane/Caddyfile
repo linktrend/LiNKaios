@@ -5,19 +5,18 @@
 {$PUBLIC_HOSTNAME} {
   encode zstd gzip
 
-  @paperclip path /api/* /ws* /auth/* /inbox* /companies* /agents* /issues*
+  @paperclip path /api/* /ws* /auth/* /inbox* /companies* /agents /agents/* /issues*
   @linkaios path /aios/* /health/linkaios
   @linkaios_home path_regexp linkaios_home ^/[^/]+/home/?$
+  @lina_root path /LINA /LINA/
+  @lisa_agent_ui path /agents-ui/lisa*
+  @eric_agent_ui path /agents-ui/eric*
   @root path /
 
   # Require authenticated session from oauth2-proxy before upstream forwarding.
   forward_auth oauth2-proxy:4180 {
     uri /oauth2/auth
     copy_headers X-Auth-Request-Email X-Auth-Request-User X-Auth-Request-Access-Token
-  }
-
-  handle @paperclip {
-    reverse_proxy paperclip:3100
   }
 
   handle @linkaios {
@@ -27,6 +26,22 @@
 
   handle @linkaios_home {
     reverse_proxy linkaios:4000
+  }
+
+  handle @lina_root {
+    redir /LINA/home 302
+  }
+
+  handle @lisa_agent_ui {
+    reverse_proxy host.docker.internal:28789
+  }
+
+  handle @eric_agent_ui {
+    reverse_proxy host.docker.internal:28799
+  }
+
+  handle @paperclip {
+    reverse_proxy paperclip:3100
   }
 
   handle @root {

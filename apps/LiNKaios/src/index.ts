@@ -178,8 +178,7 @@ app.get("/:companyPrefix/home", (req, res) => {
     return res.status(400).type("text/plain").send("Missing company prefix");
   }
   const html = renderLiNKaiosHomePage({
-    companyPrefix,
-    host: req.get("host")
+    companyPrefix
   });
   return res.status(200).type("html").send(html);
 });
