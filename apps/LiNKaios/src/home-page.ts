@@ -1,21 +1,9 @@
 type LiNKaiosHomeOptions = {
   companyPrefix: string;
-  host?: string | null;
 };
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
 
 export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
   const companyPrefix = options.companyPrefix.trim();
-  const safePrefix = escapeHtml(companyPrefix);
-  const safeHost = escapeHtml(options.host?.trim() || "LiNKtrend Control Plane");
   const base = `/${encodeURIComponent(companyPrefix)}`;
 
   const links = {
@@ -23,7 +11,8 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
     operations: `${base}/dashboard`,
     linkskills: `${base}/linkskills`,
     linkbrain: `${base}/linkbrain`,
-    agentUi: `${base}/agent-ui`
+    agentUi: `${base}/agent-ui`,
+    logout: "/oauth2/sign_out"
   };
 
   return `<!doctype html>
@@ -51,18 +40,47 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
       }
       .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
       .topbar {
-        display: flex; align-items: center; justify-content: space-between;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
         border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;
         background: rgba(17, 24, 39, 0.7);
       }
-      .brand { font-weight: 700; letter-spacing: 0.3px; }
-      .host { color: var(--muted); font-size: 13px; }
-      .tabs { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
-      .tab {
+      .brand { font-weight: 700; letter-spacing: 0.3px; margin-top: 2px; }
+      .status-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #ef4444;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+      }
+      .status.connected .dot {
+        background: #22c55e;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+      }
+      .status.disconnected .dot {
+        background: #ef4444;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+      }
+      .logout {
         text-decoration: none; color: var(--text); border: 1px solid var(--border);
         padding: 8px 12px; border-radius: 10px; background: rgba(17, 24, 39, 0.7); font-size: 14px;
       }
-      .tab.active { border-color: var(--accent); color: var(--accent); }
+      .logout:hover { border-color: var(--accent); color: var(--accent); }
       h1 { margin: 28px 0 6px; font-size: 34px; }
       p.lead { margin: 0 0 24px; color: var(--muted); }
       .grid {
@@ -90,42 +108,65 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
     <main class="wrap">
       <header class="topbar">
         <div class="brand">LiNKaios</div>
-        <div class="host">${safeHost}</div>
+        <div class="status-block">
+          <div id="cp-status" class="status disconnected">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="cp-status-text">disconnected</span>
+          </div>
+          <a class="logout" href="${links.logout}">Logout</a>
+        </div>
       </header>
-
-      <nav class="tabs" aria-label="LiNKaios navigation">
-        <a class="tab active" href="${links.home}">Home</a>
-        <a class="tab" href="${links.operations}">Operations</a>
-        <a class="tab" href="${links.linkskills}">LiNKskills</a>
-        <a class="tab" href="${links.linkbrain}">LiNKbrain</a>
-        <a class="tab" href="${links.agentUi}">Agent UI</a>
-      </nav>
 
       <section>
         <h1><span class="accent">LiNK</span>aios Home</h1>
-        <p class="lead">Unified orchestration surface for company <strong>${safePrefix}</strong>.</p>
+        <p class="lead">LiNKtrend Ai Operating System</p>
       </section>
 
       <section class="grid">
         <a class="card" href="${links.operations}">
           <h2>Operations</h2>
-          <p>Open Paperclip workspace for missions, inbox, issues, routines, goals, and company operations.</p>
+          <p>Open the company workspace for missions, inbox, issues, routines, goals, and company operations.</p>
         </a>
         <a class="card" href="${links.linkskills}">
           <h2>LiNKskills</h2>
-          <p>Manage capability routing and per-agent skill controls.</p>
+          <p>Manage all agents capability and skill controls.</p>
         </a>
         <a class="card" href="${links.linkbrain}">
           <h2>LiNKbrain</h2>
-          <p>View operational memory and governance data.</p>
+          <p>View operational shared memory and governance data.</p>
         </a>
         <a class="card" href="${links.agentUi}">
-          <h2>Agent UI</h2>
-          <p>Open runtime agent interfaces such as OpenClaw.</p>
+          <h2>Agents UI</h2>
+          <p>Open runtime agent interfaces.</p>
         </a>
       </section>
     </main>
+    <script>
+      (() => {
+        const statusNode = document.getElementById("cp-status");
+        const statusTextNode = document.getElementById("cp-status-text");
+        const healthUrl = "/health/linkaios";
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2500);
+        fetch(healthUrl, { signal: controller.signal, credentials: "same-origin" })
+          .then((response) => {
+            if (!response.ok) throw new Error("health check failed");
+            if (statusNode) {
+              statusNode.classList.remove("disconnected");
+              statusNode.classList.add("connected");
+            }
+            if (statusTextNode) statusTextNode.textContent = "connected";
+          })
+          .catch(() => {
+            if (statusNode) {
+              statusNode.classList.remove("connected");
+              statusNode.classList.add("disconnected");
+            }
+            if (statusTextNode) statusTextNode.textContent = "disconnected";
+          })
+          .finally(() => clearTimeout(timeout));
+      })();
+    </script>
   </body>
 </html>`;
 }
-
