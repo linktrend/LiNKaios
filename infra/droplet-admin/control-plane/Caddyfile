@@ -29,7 +29,8 @@
   }
 
   handle @lina_root {
-    redir /LINA/home 302
+    rewrite * /LINA/home
+    reverse_proxy linkaios:4000
   }
 
   handle @lisa_agent_ui {
@@ -45,7 +46,8 @@
   }
 
   handle @root {
-    redir /LINA/home 302
+    rewrite * /LINA/home
+    reverse_proxy linkaios:4000
   }
 
   handle {
