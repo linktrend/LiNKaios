@@ -41,13 +41,23 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
       .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
       .topbar {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 12px;
         border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;
         background: rgba(17, 24, 39, 0.7);
       }
-      .brand { font-weight: 700; letter-spacing: 0.3px; margin-top: 2px; }
+      .brand-title {
+        font-size: 24px;
+        line-height: 1.1;
+        margin: 0;
+        font-weight: 800;
+      }
+      .brand-subtitle {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
       .status-block {
         display: flex;
         flex-direction: column;
@@ -61,6 +71,10 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
         font-size: 13px;
         color: var(--muted);
       }
+      .status-label {
+        font-size: 12px;
+        color: var(--muted);
+      }
       .dot {
         width: 8px;
         height: 8px;
@@ -72,17 +86,25 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
         background: #22c55e;
         box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
       }
+      .status.partial .dot {
+        background: #f59e0b;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
+      }
       .status.disconnected .dot {
         background: #ef4444;
         box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
       }
       .logout {
-        text-decoration: none; color: var(--text); border: 1px solid var(--border);
-        padding: 8px 12px; border-radius: 10px; background: rgba(17, 24, 39, 0.7); font-size: 14px;
+        text-decoration: none;
+        color: #fecaca;
+        border: 1px solid #7f1d1d;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: rgba(127, 29, 29, 0.35);
+        font-size: 14px;
       }
-      .logout:hover { border-color: var(--accent); color: var(--accent); }
-      h1 { margin: 28px 0 6px; font-size: 34px; }
-      p.lead { margin: 0 0 24px; color: var(--muted); }
+      .logout:hover { border-color: #ef4444; color: #fee2e2; background: rgba(127, 29, 29, 0.6); }
+      .section { margin-top: 18px; }
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -107,8 +129,12 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
   <body>
     <main class="wrap">
       <header class="topbar">
-        <div class="brand">LiNKaios</div>
+        <div>
+          <h1 class="brand-title"><span class="accent">LiNK</span>aios Home</h1>
+          <p class="brand-subtitle">LiNKtrend Ai Operating System</p>
+        </div>
         <div class="status-block">
+          <span class="status-label">System Status</span>
           <div id="cp-status" class="status disconnected">
             <span class="dot" aria-hidden="true"></span>
             <span id="cp-status-text">disconnected</span>
@@ -117,12 +143,7 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
         </div>
       </header>
 
-      <section>
-        <h1><span class="accent">LiNK</span>aios Home</h1>
-        <p class="lead">LiNKtrend Ai Operating System</p>
-      </section>
-
-      <section class="grid">
+      <section class="section grid">
         <a class="card" href="${links.operations}">
           <h2>Operations</h2>
           <p>Open the company workspace for missions, inbox, issues, routines, goals, and company operations.</p>
@@ -145,26 +166,54 @@ export function renderLiNKaiosHomePage(options: LiNKaiosHomeOptions): string {
       (() => {
         const statusNode = document.getElementById("cp-status");
         const statusTextNode = document.getElementById("cp-status-text");
-        const healthUrl = "/health/linkaios";
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 2500);
-        fetch(healthUrl, { signal: controller.signal, credentials: "same-origin" })
-          .then((response) => {
-            if (!response.ok) throw new Error("health check failed");
-            if (statusNode) {
-              statusNode.classList.remove("disconnected");
-              statusNode.classList.add("connected");
-            }
-            if (statusTextNode) statusTextNode.textContent = "connected";
-          })
-          .catch(() => {
-            if (statusNode) {
-              statusNode.classList.remove("connected");
-              statusNode.classList.add("disconnected");
-            }
-            if (statusTextNode) statusTextNode.textContent = "disconnected";
-          })
-          .finally(() => clearTimeout(timeout));
+        const checks = [
+          "/health/linkaios",
+          "${links.operations}",
+          "${links.linkskills}",
+          "${links.linkbrain}",
+          "${links.agentUi}"
+        ];
+
+        const ping = async (url) => {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 2500);
+          try {
+            const response = await fetch(url, { signal: controller.signal, credentials: "same-origin" });
+            return response.ok;
+          } catch {
+            return false;
+          } finally {
+            clearTimeout(timeout);
+          }
+        };
+
+        Promise.all(checks.map((url) => ping(url))).then((results) => {
+          const healthyCount = results.filter(Boolean).length;
+          const totalCount = results.length;
+
+          if (!statusNode || !statusTextNode) return;
+          statusNode.classList.remove("connected", "partial", "disconnected");
+
+          if (healthyCount === totalCount) {
+            statusNode.classList.add("connected");
+            statusTextNode.textContent = "all systems healthy";
+            return;
+          }
+
+          if (healthyCount === 0) {
+            statusNode.classList.add("disconnected");
+            statusTextNode.textContent = "all systems down";
+            return;
+          }
+
+          statusNode.classList.add("partial");
+          statusTextNode.textContent = "some systems healthy";
+        }).catch(() => {
+          if (!statusNode || !statusTextNode) return;
+          statusNode.classList.remove("connected", "partial");
+          statusNode.classList.add("disconnected");
+          statusTextNode.textContent = "all systems down";
+        });
       })();
     </script>
   </body>
