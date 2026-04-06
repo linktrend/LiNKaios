@@ -1,0 +1,41 @@
+# 08 – Troubleshooting & Briefing Packs
+
+## Purpose
+When problems arise (build failures, runtime bugs, CI errors, unexpected behavior), Cursor must generate a concise, copy‑ready **Briefing Pack** I can paste into another AI for help. It must also propose immediate triage steps.
+
+## Scope
+- Applies across the repo (`apps/**`, `packages/**`, `supabase/**`, `automations/**`).
+
+## Trigger Conditions
+- Any failed command (typecheck, lint, test, build, EAS, deploy).
+- Uncaught exceptions at runtime or failing E2E steps.
+- Ambiguous/contradictory logs or errors raised during a batch.
+
+## Briefing Pack (structure)
+Return a markdown report with these sections:
+1) **Summary (2–4 sentences)** – what failed and where.
+2) **Severity & Impact** – `blocker | major | minor` and user impact.
+3) **Environment** – dev/staging/prod, OS, node version, package versions if relevant.
+4) **Exact Commands & Outputs** – the commands run and the relevant log excerpts (trim to the failing parts, include stack traces).
+5) **Reproduction Steps** – step‑by‑step, minimal and deterministic.
+6) **Expected vs Actual** – short bullet list.
+7) **Suspected Root Cause(s)** – 1–3 hypotheses with rationale.
+8) **Experiments Performed** – what was tried, with results.
+9) **Proposed Fix Plan** – step list with estimated blast radius.
+10) **Rollback Plan** – if the fix fails.
+11) **Next Questions for External AI** – 5–10 pointed questions to ask another AI (or a human).
+12) **Artifacts** – links/paths to failing files, test names, screenshots if any.
+
+## Immediate Triage Behavior
+- Suggest the top 3 quick experiments to narrow root cause (toggle flags, minimal repro, isolate module/package, clear caches, pin versions).
+- If a minimal repro can be isolated, generate it into a `repro/` folder or provide exact steps to create it.
+
+## Signal Hygiene
+- Keep Briefing Packs under ~300 lines. Use code blocks for logs. Remove secrets.
+- Prefer **actionable** content over generic advice.
+
+## Definition of Done (troubleshooting batch)
+- [ ] Briefing Pack returned with all 12 sections
+- [ ] Minimal repro or clear reproduction steps provided
+- [ ] Top 3 experiments listed
+- [ ] If resolved, include final diff and reason the fix worked

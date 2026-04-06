@@ -1,0 +1,53 @@
+# 07 – Testing & Post-Development Verification
+
+## Purpose
+Ensure that after every feature or fix, tests are created/extended, run, and results are verified. Drive functional validation and bug detection beyond just CI gates.
+
+## Scope
+- Applies across all apps/packages (`apps/**`, `packages/**`).
+- Extends rules in `06-quality.mdc`.
+
+## Core Principles
+- Every new feature or bug fix must ship with corresponding automated tests.
+- Tests must be meaningful: they validate real functionality, not just implementation details.
+- Post-development verification ensures functionality works end-to-end and regressions are caught early.
+
+## Testing Workflow (per batch)
+1. **Unit Tests**
+   - Add/update Vitest tests for any new utilities, hooks, or components.
+   - Cover both positive and negative paths.
+2. **Integration Tests**
+   - For server actions, API routes, or Supabase utilities, write integration tests that hit a test DB or mocked client.
+   - Verify auth, validation, and data flow.
+3. **End-to-End Tests**
+   - For user-facing features:
+     - Web: add/update Playwright tests for flows (auth, navigation, CRUD, payments).
+     - Mobile: add/update Detox tests for flows (login, navigation, offline, sync).
+   - Include realistic fixture data where possible.
+4. **Regression Verification**
+   - When fixing a bug, write a test that fails before the fix and passes after.
+   - Ensure regressions are captured permanently.
+5. **Exploratory Bug Hunt (optional)**
+   - Cursor generates a Bug Hunt Checklist: edge cases, boundary inputs, invalid states.
+   - Suggest exploratory manual steps and corresponding automated test candidates.
+
+## Reporting
+- At the end of each batch, Cursor must output:
+  - List of new/updated tests (file + test name).
+  - Test run summary (PASS/FAIL, coverage if available).
+  - Bug Hunt Checklist (if relevant).
+
+## Definition of Done (testing batch)
+- [ ] Unit, integration, and E2E tests updated/added for new code paths
+- [ ] Regression tests written for fixed bugs
+- [ ] All tests pass locally (`pnpm test`, `pnpm e2e:web`, `pnpm e2e:mobile`)
+- [ ] Bug Hunt Checklist generated and reviewed
+- [ ] Failures reported with fix proposals
+
+## Cursor-Specific Behaviors
+- After implementing a feature/fix, immediately switch to test-authoring mode before marking work complete.
+- If no tests exist for the area, scaffold minimal test files with TODO markers.
+- Do not declare completion until all tests are green or failures are explicitly acknowledged with fixes.
+
+## Conflict Resolution
+- If rules here conflict with `06-quality.mdc` or global rules, surface the conflict and propose a consolidated approach in the Batch Header.

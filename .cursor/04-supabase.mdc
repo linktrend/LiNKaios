@@ -1,0 +1,82 @@
+# 04 – Supabase (DB, Auth, RLS, Edge Functions)
+
+## Purpose
+Standards for using Supabase across this repo: database schema/migrations, Row Level Security (RLS), Auth, Storage, Realtime, and Edge Functions (Deno).
+
+## Scope
+- Applies to files in:
+  - `supabase/**` (SQL migrations, seed, policies, edge functions)
+  - `apps/**/app/api/**` (Next.js Route Handlers / server actions that call Supabase)
+  - `apps/**/lib/db/**` (DB utilities)
+  - `packages/utils/db/**` (shared DB utilities, if present)
+
+## Core Principles
+- **Typed end‑to‑end:** generate and consume types from the database (e.g., `@supabase/postgrest-js` with generated types or drizzle-kit types if used).
+- **RLS first:** every table must have RLS enabled with explicit policies. No table may remain publicly readable/writable unless intentional.
+- **Least privilege:** APIs and edge functions operate with the minimum role/scopes required.
+- **No secrets in code:** credentials only via environment variables and typed config loaders.
+
+## Auth
+- Use Supabase Auth helpers for Next.js (web) and Expo (mobile).
+- Sessions/tokens handled on the server when possible. Avoid exposing tokens to the client; use server actions or route handlers.
+- Define clear user roles/claims. If custom JWT claims are needed, document them in `PROJECT-OVERVIEW.md` and validate in policies/functions.
+
+## Database Schema & Migrations
+- **Never** mutate schemas directly in production.
+- All changes ship via migration files under `supabase/migrations/*` with:
+  1) Up migration (idempotent when possible)
+  2) Down/rollback notes (commented section if not automated)
+  3) Brief rationale at top of file
+- Naming: `YYYYMMDDHHMM__short_description.sql`
+- Prefer small, reviewable migrations. Avoid combining schema + data migrations unless tightly coupled.
+- Validate with `supabase db lint` or equivalent before applying.
+
+## RLS & Policies
+- RLS **enabled** on all tables by default.
+- Policies must be explicit for **SELECT/INSERT/UPDATE/DELETE** and reference authenticated roles or claims.
+- Provide example policy snippet with rationale in PR descriptions.
+- Never rely solely on client-side checks; policies are the source of truth.
+
+## Storage
+- Buckets must have explicit policies; default to **private**. Public assets require documented justification and narrow read rules.
+- Avoid storing secrets or PII in publicly accessible files.
+
+## Realtime & Triggers
+- Use realtime for UI updates only when necessary. Consider rate limits and backpressure.
+- Database triggers must be accompanied by tests or a manual verification plan.
+
+## Edge Functions (Deno)
+- Functions live under `supabase/functions/*` with one folder per function.
+- Each function:
+  - Validates inputs with Zod
+  - Authenticates/authorizes based on role/claims
+  - Is idempotent where applicable (e.g., webhook handlers)
+  - Uses environment variables from project config (not hardcoded)
+- Provide a README per function (purpose, inputs, outputs, curl example).
+
+## Local Dev & Environments
+- Keep an `.env.example` synchronized with required keys: Supabase URL/anon/service keys, JWT secrets, storage buckets, etc.
+- Document commands to start local Supabase (if used) or remote connections for dev/staging.
+- Prefer separate **dev/staging/prod** projects and keys; never reuse prod keys locally.
+
+## Testing
+- Unit: test DB utilities (query builders, serializers).
+- Integration: for server actions/APIs using Supabase, write integration tests that hit a test database or a mocked client.
+- For Edge Functions, add request/response tests with fixture payloads.
+
+## Definition of Done (Supabase batch)
+- [ ] Migration files created and linted
+- [ ] RLS enabled with explicit policies
+- [ ] Types generated/updated and imported by callers
+- [ ] New env vars documented in `.env.example`
+- [ ] Edge function(s) documented and locally verified
+- [ ] Tests updated or added
+
+## Cursor-Specific Behaviors
+- At batch start, output a **Batch Header** listing affected tables, policies, buckets, functions, and files under `supabase/**`.
+- When proposing schema/policy changes, show the exact SQL diff and a short rollback plan.
+- When calling Supabase from server actions/APIs, show where validation/authz happens.
+- Do **not** introduce new tables/columns without a migration + policy plan.
+
+## Conflict Resolution
+- If these rules conflict with `01-foundation.mdc` or web/mobile rules, surface the conflict and propose a consolidated approach in the Batch Header.

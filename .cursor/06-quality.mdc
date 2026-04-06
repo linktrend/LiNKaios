@@ -1,0 +1,55 @@
+# 06 – Quality (Testing, Linters, Build Gates)
+
+## Purpose
+Ensure consistent quality across all apps and packages in this monorepo using type-checking, tests, linting, formatting, and build verification.
+
+## Scope
+- Applies globally across the repo (`apps/**`, `packages/**`).
+
+## Core Principles
+- All code must pass type-checking, linting, formatting, and tests before being considered complete.
+- CI pipelines enforce these gates on every pull request; local developers run them before commits.
+
+## Type-Checking
+- Use strict TypeScript (`"strict": true`) across all apps/packages.
+- Run `pnpm typecheck` at repo root; ensure zero errors.
+
+## Linting & Formatting
+- ESLint (repo-configured) is required; Prettier ensures consistent formatting.
+- Run `pnpm lint` and `pnpm format --check` before marking a batch complete.
+
+## Testing
+- **Unit Tests:**
+  - Vitest for utilities, hooks, and components in both web and mobile.
+- **Integration Tests:**
+  - Server actions, API routes, and Supabase DB utilities must have integration coverage.
+- **End-to-End Tests:**
+  - Playwright for web (apps/web).
+  - Detox for mobile (apps/mobile).
+- Tests should be colocated where possible (e.g., `__tests__` folders) or under `tests/`.
+- Aim for practical coverage: critical paths must always be tested.
+
+## Build Verification
+- Run `pnpm build` to confirm both apps and packages compile successfully.
+- For mobile, verify `eas build --platform ios/android --profile preview` succeeds in CI (can be on main branch or release branches).
+
+## Continuous Integration (CI)
+- Required jobs: `typecheck`, `lint`, `test`, `build`.
+- Optional but recommended: `e2e:web`, `e2e:mobile` on staging branches or nightly runs.
+- Fail fast: PRs cannot merge with failing jobs.
+
+## Definition of Done (quality batch)
+- [ ] Type-check passes (`pnpm typecheck`)
+- [ ] Lint passes (`pnpm lint`)
+- [ ] Prettier check passes (`pnpm format --check`)
+- [ ] Unit tests pass (`pnpm test`)
+- [ ] Integration/E2E tests pass if affected
+- [ ] Build succeeds (`pnpm build` or EAS build)
+
+## Cursor-Specific Behaviors
+- At batch end, always output a **DoD checklist** with PASS/FAIL status for typecheck, lint, format, tests, and build.
+- If failures occur, provide the exact command outputs and propose fixes.
+- Never mark work as complete if quality gates fail.
+
+## Conflict Resolution
+- If these rules conflict with `01-foundation.mdc` or global rules, surface the conflict and propose a resolution in the Batch Header.

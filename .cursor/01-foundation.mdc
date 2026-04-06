@@ -1,0 +1,83 @@
+# 01 – Foundation (Project Rules)
+
+## Purpose
+Establish a consistent monorepo foundation, package management, scripts, CI gates, commit hygiene, and documentation practices for all work in this repository.
+
+## Monorepo Layout (Turborepo)
+- Use the following structure:
+  - `apps/web` – Next.js (App Router) web app
+  - `apps/mobile` – React Native (Expo) mobile app
+  - `packages/ui` – shared UI components (web/mobile-compatible where possible)
+  - `packages/utils` – shared utilities (isomorphic TS)
+  - `packages/config` – shared ESLint, TS, Prettier, Tailwind config, etc.
+- Do not place application-specific code inside `packages/`.
+- Respect project boundaries. Shared code lives only in `packages/*` and is imported via workspace packages.
+
+## Package Manager & Workspaces
+- **Package manager:** `pnpm` (workspaces enabled).
+- Add new packages with `pnpm add <dep> -w` for workspace or within a specific app with `-F <filter>`.
+- Keep `package.json` scripts as the primary orchestration interface; do not create ad‑hoc shell scripts without adding a corresponding npm script.
+
+## TypeScript & Config
+- TypeScript: strict mode across all apps/packages.
+- Centralize base TS config in `packages/config/tsconfig.base.json`; apps/packages extend it.
+- Keep path aliases consistent and defined in the base config.
+
+## Linting, Formatting, and Style
+- ESLint + Prettier are mandatory. Do not disable rules without justification.
+- Tailwind (for web) configuration lives in `packages/config/tailwind.config.ts` and is extended per app when needed.
+- Run formatters and linters before completion of each batch.
+
+## Scripts (root)
+Provide (and use) these scripts at repo root (adjust if already present):
+- `pnpm typecheck` – run TypeScript checks for all workspaces
+- `pnpm lint` – run ESLint for all workspaces
+- `pnpm format` – run Prettier (check or write mode)
+- `pnpm build` – build all apps/packages with Turborepo caching
+- `pnpm test` – run unit tests (Vitest) across workspaces
+- `pnpm e2e:web` – run Playwright tests for web (if configured)
+- `pnpm dev:web` – start Next.js dev server
+- `pnpm dev:mobile` – start Expo dev server
+- `pnpm ci` – composite: `typecheck → test → lint → build`
+
+## CI Gates (GitHub Actions Recommended)
+- Required checks per PR: `typecheck`, `test`, `lint`, `build` (web and packages).
+- For mobile, include an EAS build workflow (can be nightly or on release branches).
+- Block merges when any required check fails.
+- Produce an artifacts summary and surface failures in CI logs.
+
+## Commit Hygiene (Conventional Commits)
+- Enforce conventional commits: `type(scope): short summary`
+- Common types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci`.
+- Keep scope small (e.g., `web`, `mobile`, `ui`, `utils`, `config`, `supabase`).
+- Cursor: when generating commits, follow this format automatically.
+
+## Definition of Done (Repo-Level)
+Before marking a batch or PR complete:
+1) All acceptance criteria met.
+2) `pnpm typecheck`, `pnpm test`, `pnpm lint`, and `pnpm build` pass.
+3) Update `CHANGELOG.md` entry if the change is user‑visible (optional for MVP).
+4) Update or create docs (README/USAGE/API) impacted by the change.
+
+## Documentation
+- Primary docs in `README.md` at repo root with links to app/package readmes.
+- Each app/package has its own `README.md` describing local scripts and usage.
+- Use concise JSDoc for exported functions/components.
+
+## Security & Secrets
+- Never commit secrets. Use `.env*` files and a typed config loader.
+- Any new env var must be added to `.env.example` with a clear description.
+
+## Migrations & Data Safety (high level, details in 04-supabase.mdc)
+- Schema changes must ship with explicit SQL migrations and a rollback note.
+- Do not mutate production schemas ad hoc.
+
+## Cursor-Specific Behaviors (applies to this repo)
+- Respect workspace boundaries and the layout described above.
+- Use the existing scripts. If a new script is required, add it to `package.json` and document it in the PR.
+- Prefer additive, small diffs; avoid sweeping refactors inside one batch unless explicitly requested.
+- At batch start, output a **Batch Header** (scope, inputs, plan, risks/assumptions).
+- At batch end, output a **DoD checklist** (PASS/FAIL) with exact run commands.
+
+## Conflict Resolution
+- If these rules conflict with global User Rules or project context files, surface the conflict and propose a consolidated update before proceeding.

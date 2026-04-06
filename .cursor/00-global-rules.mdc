@@ -1,0 +1,233 @@
+---
+alwaysApply: true
+---
+
+# Global Development Rules
+
+The following rules define the required standards for all development work across LinkTrend Media projects. These rules must be enforced consistently in every task. Follow them strictly unless a project-specific rule explicitly overrides one.
+
+---
+
+## 1. Styling & UI Rules
+
+### Tailwind-Only Styling
+Use **Tailwind CSS classes exclusively** for all styling.  
+Avoid inline styles except for dynamic, computed values.  
+Do not write raw CSS or custom style props unless explicitly required.
+
+### Semantic & Accessible UI
+Use semantic HTML and ARIA attributes.  
+All layouts must be **mobile-first and responsive**.
+
+### shadcn/ui Rule
+For any task involving **shadcn/ui**:
+1. Always consult the `shadcnui-mcp` tool.  
+2. Call `get_component_demo` before implementing.  
+3. Implement components exactly as demonstrated, following shadcn/ui patterns.
+
+---
+
+## 2. UX & User Feedback Rules
+
+### User-Friendly Error Handling
+All errors (network, validation, business logic) must:
+- Use a **consistent, non-obtrusive feedback mechanism** (toast or inline message).
+- Never expose raw technical errors to end users.
+- Log technical details internally.
+- Present a clear, user-safe message.
+
+### Never Swallow Errors
+Never ignore or suppress errors.  
+Log contextual details and propagate them through typed error paths.
+
+---
+
+## 3. State, Data, and Architecture Rules
+
+### Preferred State Management
+Default to **server-side state** with **TanStack Query (React Query)** for:
+- Data fetching
+- Caching
+- Server synchronization
+
+Use local component state only for **UI-local concerns** (e.g., modals, form inputs).
+
+### Data Model Change Rule
+For any schema change:
+- Create an explicit SQL migration.
+- Provide backward-compatibility notes.
+- Include a brief rollback instruction.
+Never mutate schemas ad hoc.
+
+### Secrets & Environment Variables
+Never commit secrets.  
+Use `.env` + a typed config loader.  
+When new env vars are added:
+- Update `.env.example`
+- Document required values
+
+---
+
+## 4. Testing Rules
+
+### Test Scope
+Choose the correct testing level:
+- **Unit Tests** → pure functions & isolated logic  
+- **Integration Tests** → API routes, DB interactions  
+- **E2E Tests** → major user flows (e.g., Playwright)
+
+Prioritize:
+- The “happy path”
+- All critical error paths
+
+### Code Test Rule
+Always add or update relevant tests when modifying code.  
+Tests must pass before marking a task complete.
+
+---
+
+## 5. Task Execution Rules
+
+### Small Steps Rule
+Prefer small, incremental, reviewable changes.  
+Avoid large refactors in a single batch unless explicitly requested.
+
+### Maintain Scope Rule
+Respect the defined task scope.  
+No scope creep.  
+If unclear, list:
+- Assumptions  
+- Risks  
+- Open questions  
+Then proceed.
+
+### Ambiguity Rule
+If anything is ambiguous:
+1. Ask up to **three focused questions**.  
+2. If still unclear, proceed with explicit written assumptions.  
+Do not block the batch.
+
+### Large Changes Confirmation Rule
+Before making complex or multi-file changes:
+- Summarize risks  
+- Outline the plan  
+- Request confirmation  
+
+### Always Plan Rule
+Before coding:
+- Outline intended changes  
+- Provide rationale  
+- List steps  
+
+Wait for approval if required.
+
+---
+
+## 6. Batch Header Rule
+
+Before any implementation, generate a Batch Header saved to:
+
+`docs/batch-headers/[task-name]-[timestamp].md`
+
+The header must include:
+
+- **Scope:** 1–2 hour target  
+- **Inputs:** Links, files, or context used  
+- **Plan:** Bullet-step execution plan  
+- **Risks & Assumptions:** Bullet list  
+- **Script Additions:** Any package.json updates (if applicable)
+
+No code should be written until the Batch Header is shown and approved.
+
+---
+
+## 7. Code Quality Rules
+
+### Clarity Rule
+Use TypeScript throughout.  
+Follow functional, declarative patterns with early returns.  
+Use consistent naming conventions for variables, functions, folders, and components.
+
+### Directory Consistency Rule
+Respect the existing project structure.  
+Place code in the correct directories.  
+Do not mix unrelated domains or collapse structure.
+
+### JSDoc Rule
+All exported functions/components require JSDoc including:
+- Purpose  
+- Params  
+- Returns  
+
+### Shippable Code Rule
+Always provide complete, production-ready code:
+- No placeholders  
+- No “TODOs”  
+- All imports included  
+- Fully functional  
+
+### Find the Root Rule
+Fix the root cause of any issue—not only the surface symptom.
+
+---
+
+## 8. Dependency Management Rules
+
+### Justify Dependencies
+Prefer:
+- Standard library  
+- Existing project packages  
+
+Introduce a new dependency only if:
+- It is necessary  
+- It is lightweight  
+- You provide a one-line justification
+
+---
+
+## 9. Commit Rules
+
+### Conventional Commits
+Commit messages must follow:
+
+
+Examples:
+- feat(api): add new subscription endpoint
+- fix(ui): correct button alignment
+- chore(db): update migration scripts
+
+Maintain a clean and consistent commit history.
+
+---
+
+## 10. Tech Stack Rule
+
+Default stack for all LinkTrend Media projects:
+
+**Web:**
+- Next.js (App Router)
+- TypeScript
+- Tailwind
+- shadcn/ui
+- TanStack Query
+- Zod
+- Supabase (Auth, DB, RLS, Edge Functions)
+
+**Mobile:**
+- React Native  
+- Expo  
+- EAS  
+
+**Automations:**
+- n8n running on VPS
+
+**Hosting:**
+- Vercel for web  
+- Supabase for backend  
+- VPS for long-running jobs
+
+Any deviation requires explicit approval.
+
+---
+
+# End of Global Development Rules
