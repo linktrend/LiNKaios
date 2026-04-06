@@ -1,0 +1,54 @@
+# 05 – Automations (n8n Workflows)
+
+## Purpose
+Standards for creating and maintaining automation workflows using n8n, running on a self-hosted VPS.
+
+## Scope
+- Applies to files under `automations/**` (if version-controlled) and any scripts/config related to n8n integration.
+- Applies conceptually to all automation-related tasks linked to this repo.
+
+## Core Principles
+- Automations should be idempotent (safe to re-run without side effects).
+- Always validate and sanitize inputs before acting (Zod or built-in validators).
+- Handle errors explicitly; retries with exponential backoff for transient failures.
+- Ensure logging of workflow runs with context (workflow id, trigger, payload ids).
+
+## Secrets & Configuration
+- Never hardcode secrets or tokens in workflows.
+- All secrets come from environment variables or n8n’s encrypted credentials store.
+- New required secrets must be added to `.env.example` with a description.
+
+## Triggers & Scheduling
+- Use webhook triggers for app integrations.
+- Use cron triggers for scheduled jobs; document timing in `PROJECT-OVERVIEW.md`.
+- Avoid overly aggressive schedules that may overload APIs or databases.
+
+## Reliability & Safety
+- For external calls (APIs, Supabase, etc.), implement retry with backoff.
+- Use idempotency keys where supported (e.g., in payment or webhook flows).
+- Protect against duplicate processing (e.g., via database unique keys or locks).
+
+## Observability
+- Log inputs, outputs, and errors with enough context to debug.
+- Use alerts (email/Slack/Telegram) for critical failures.
+
+## Version Control & Documentation
+- If workflows are checked into version control, store them as JSON exports under `automations/`.
+- Each workflow must have a README: purpose, trigger, inputs, outputs, dependencies.
+- Include example payloads (if webhook-triggered).
+
+## Definition of Done (automation batch)
+- [ ] Workflow JSON exported and committed (if versioned)
+- [ ] README created/updated with purpose, inputs, outputs
+- [ ] All secrets pulled from env/n8n credentials store
+- [ ] Test run performed with fixture payloads or staging integration
+- [ ] Logging and error handling confirmed
+
+## Cursor-Specific Behaviors
+- At batch start, output a **Batch Header** referencing the automation being touched and its trigger.
+- When proposing new workflows, show the high-level flow (trigger → nodes → outputs) before generating JSON.
+- Never expose raw secrets; always reference env vars or n8n credentials.
+- Suggest observability hooks (logs, alerts) when adding critical automations.
+
+## Conflict Resolution
+- If rules here conflict with other project rules (e.g., Supabase policies), surface the conflict and propose a resolution in the Batch Header.

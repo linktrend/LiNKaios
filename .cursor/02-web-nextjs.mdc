@@ -1,0 +1,77 @@
+# 02 – Web (Next.js App Router)
+
+## Purpose
+Standards for the web app in `apps/web` using Next.js (App Router), Tailwind, shadcn/ui, TanStack Query, and Zod. Pairs with Supabase for auth/data.
+
+## Scope
+- Applies to files in `apps/web/**` and shared UI in `packages/ui/**` used by the web app.
+
+## Architecture & Conventions
+- Use the **App Router** with server components by default. Client components only when required (stateful UI, browser APIs, event handlers).
+- Organize routes under `apps/web/app/*` with clear segment folders. Co-locate `page.tsx`, `layout.tsx`, `loading.tsx`, and route-specific components in the same segment.
+- Prefer **Server Actions** for mutations when appropriate; otherwise use API routes under `app/api/*`.
+- Shared UI lives in `packages/ui`. Avoid inline complex components inside route files.
+- Centralize environment access via a typed config module (e.g., `packages/config/env.ts`) — do not read from `process.env` directly in components.
+
+## Styling & UI
+- Tailwind is the default CSS approach.
+- Use **shadcn/ui** for primitives; compose them rather than forking.
+- Keep components pure and functional; use early returns and clear props.
+- Accessibility is mandatory: semantic HTML, ARIA where needed, keyboard navigation, visible focus states.
+
+## Data Fetching
+- For server components: fetch data directly with async/await; cache where appropriate.
+- For client components: use **TanStack Query** for remote state, with query keys defined in a centralized helper.
+- Validate all inputs and external responses with **Zod**. Return typed data only.
+
+## Auth (Supabase)
+- Use Supabase Auth helpers for Next.js.
+- Cookies/session handling must be done on the server when possible; avoid exposing tokens to the client.
+- Protect server actions and API routes with auth checks and role/permission logic.
+
+## Error Handling
+- Do not swallow errors. Use error boundaries and meaningful error messages.
+- Wrap external calls with typed error utilities; log context (operation, ids).
+
+## Performance
+- Avoid unnecessary client components and large third-party deps.
+- Use dynamic import for heavy components; enable route-level streaming where beneficial.
+- Image optimization: use `next/image` for all remote/local images.
+
+## File/Folder Guidance
+- `app/(marketing)/*` for public pages, `app/(app)/*` for authenticated app pages (optional grouping).
+- `app/api/*` for route handlers when not using server actions.
+- `components/*` for web-only components that are too specific for `packages/ui`.
+- `lib/*` for web-specific utilities; share truly reusable logic from `packages/utils`.
+
+## Scripts (web)
+- Provide/maintain in `apps/web/package.json`:
+  - `dev` – Start Next.js dev server
+  - `build` – Production build
+  - `start` – Start production server
+  - `lint` – ESLint (extends repo config)
+  - `test` – Unit tests (Vitest) for web utilities/components
+  - `e2e` – Playwright E2E tests
+
+## Testing (web)
+- Unit tests (Vitest) for utilities/hooks/components.
+- E2E (Playwright) for critical flows: auth, navigation, CRUD, payments (when present).
+- Ensure CI runs `test` and `e2e` for `apps/web` on pull requests affecting web files.
+
+## Definition of Done (web batch)
+Before marking a web batch complete:
+- [ ] All acceptance criteria met for `apps/web`
+- [ ] Type-checks pass for web
+- [ ] Web unit tests & Playwright tests pass
+- [ ] ESLint/Prettier pass
+- [ ] No client component usage where server components suffice
+- [ ] A11y checklist: headings, labels, alt text, focus order, color contrast
+
+## Cursor-Specific Behaviors
+- At batch start, output a **Batch Header** referencing the exact files in `apps/web/**` touched.
+- When adding components, prefer creating them in `packages/ui` if they could be reused; otherwise place under `apps/web/components`.
+- When adding data flows, show the Zod schema and where validation occurs (server vs client).
+- When wiring Supabase Auth, show the auth check location and redirect behavior.
+
+## Conflict Resolution
+- If rules here conflict with `01-foundation.mdc` or global rules, surface the conflict and propose a resolution in the Batch Header.
