@@ -1,0 +1,427 @@
+---
+alwaysApply: true
+---
+
+# Worktree Isolation Rules
+
+This project uses a **Git worktree-based multi-IDE environment** with strict isolation boundaries. These rules are **MANDATORY** and **NON-WAIVABLE** under any circumstances. Cursor IDE must operate exclusively within its designated worktree folder and never violate these boundaries.
+
+---
+
+## CRITICAL: Your Designated Workspace
+
+**Cursor IDE MUST ONLY operate within:**
+
+```
+/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/cursor/
+```
+
+**Your designated branch:**
+```
+cursor-dev
+```
+
+This is your **exclusive development environment**. All file operations, code changes, and development work must occur within this folder only.
+
+---
+
+## 1. Absolute Restrictions (NEVER Violate)
+
+### ❌ FORBIDDEN: File Operations Outside Your Worktree
+
+**NEVER** read, write, modify, or delete files in:
+
+- `/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/` (root folder - protected)
+- `/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/ag/` (Antigravity IDE only)
+- `/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/agentx/` (Agent IDE only)
+- Any other worktree folder not explicitly assigned to Cursor IDE
+
+**Exception:** You may read files from other locations ONLY for reference purposes (understanding context, checking dependencies), but you must NEVER modify them.
+
+### ❌ FORBIDDEN: Branch Operations
+
+**NEVER:**
+- Switch away from the `cursor-dev` branch
+- Checkout other branches within your worktree
+- Delete or modify the `cursor-dev` branch
+- Merge other branches into `cursor-dev` without explicit approval
+- Force push or rewrite history on `cursor-dev`
+
+Your worktree is **permanently locked** to `cursor-dev`. Any branch switching will break the worktree environment.
+
+### ❌ FORBIDDEN: Worktree Modifications
+
+**NEVER:**
+- Delete the `_worktrees/cursor/` directory
+- Modify worktree configuration files
+- Run `git worktree remove` on your own worktree
+- Create nested worktrees inside `_worktrees/cursor/`
+- Modify `.git` file in your worktree (it's a link to main .git)
+
+### ❌ FORBIDDEN: Cross-Worktree Changes
+
+**NEVER:**
+- Make changes in one worktree and commit from another
+- Copy uncommitted changes between worktrees
+- Share working directory state across worktrees
+- Modify files that belong to other IDE's worktrees
+
+---
+
+## 2. Mandatory Safety Checks
+
+### Before ANY File Operation
+
+Before reading, writing, or modifying any file, you **MUST** verify:
+
+1. **Current Working Directory:**
+   ```bash
+   pwd
+   ```
+   Expected output: `/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/cursor`
+
+2. **Current Branch:**
+   ```bash
+   git branch --show-current
+   ```
+   Expected output: `cursor-dev`
+
+3. **Worktree Status:**
+   ```bash
+   git worktree list
+   ```
+   Verify that `cursor-dev` is checked out in `_worktrees/cursor/`
+
+### File Path Validation
+
+Before any file operation, verify the file path:
+
+```bash
+# Check if path is within your worktree
+realpath <file-path>
+```
+
+The resolved path **MUST** start with:
+```
+/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/cursor/
+```
+
+If it doesn't, **STOP** and refuse the operation.
+
+---
+
+## 3. Permitted Operations
+
+### ✅ ALLOWED: Within Your Worktree
+
+You **MAY**:
+- Read, write, create, and delete files within `_worktrees/cursor/`
+- Commit changes to the `cursor-dev` branch
+- Push `cursor-dev` to remote
+- Pull updates from `origin/cursor-dev`
+- Create feature branches off `cursor-dev` (within your worktree)
+- Stash and unstash changes in your worktree
+- Run development servers from your worktree
+- Install dependencies in your worktree
+- Run tests within your worktree
+
+### ✅ ALLOWED: Read-Only Reference
+
+You **MAY** read files from other locations for:
+- Understanding project structure
+- Checking shared configuration
+- Reviewing dependencies
+- Understanding context
+
+**But you MUST NEVER modify them.**
+
+---
+
+## 4. Development Workflow
+
+### Daily Development
+
+1. **Start of Day:**
+   ```bash
+   cd /Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/cursor
+   git branch --show-current  # Verify: cursor-dev
+   git pull origin cursor-dev
+   ```
+
+2. **During Development:**
+   - Make all changes within `_worktrees/cursor/`
+   - Commit regularly to `cursor-dev`
+   - Push to `origin/cursor-dev` frequently
+
+3. **End of Day:**
+   ```bash
+   git add .
+   git commit -m "feat: description of changes"
+   git push origin cursor-dev
+   ```
+
+### Integration Workflow
+
+When your work is ready for integration:
+
+1. **Create Pull Request:**
+   - Source: `cursor-dev`
+   - Target: `develop` (NEVER `main`)
+
+2. **PR Description Must Include:**
+   - Summary of changes
+   - Testing performed
+   - Any breaking changes
+   - Dependencies added/updated
+
+3. **After PR Approval:**
+   - Merge `cursor-dev` → `develop` via GitHub
+   - Pull latest `develop` into your worktree if needed
+
+### Syncing with Develop
+
+To sync your worktree with latest `develop`:
+
+```bash
+cd /Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/cursor
+git fetch origin develop
+git merge origin/develop
+# Resolve conflicts if any
+git push origin cursor-dev
+```
+
+---
+
+## 5. Error Prevention Rules
+
+### Rule: Verify Before Execute
+
+Before executing any command that modifies files:
+
+1. Confirm current directory with `pwd`
+2. Confirm current branch with `git branch --show-current`
+3. Verify file paths are within your worktree
+4. If uncertain, ask the user for confirmation
+
+### Rule: Reject Invalid Operations
+
+If asked to perform operations outside your worktree:
+
+1. **STOP immediately**
+2. Explain the worktree isolation rules
+3. Suggest the correct approach (e.g., "This file belongs to the root folder. I can only work in `_worktrees/cursor/`")
+4. Do NOT proceed even if the user insists
+
+### Rule: No Assumptions
+
+Never assume:
+- That you're in the correct directory
+- That a file path is within your worktree
+- That branch switching is safe
+- That cross-worktree operations are acceptable
+
+Always verify explicitly.
+
+---
+
+## 6. Commit and Push Rules
+
+### Commit Messages
+
+Follow conventional commits on `cursor-dev`:
+
+```
+feat(scope): description
+fix(scope): description
+chore(scope): description
+docs(scope): description
+refactor(scope): description
+test(scope): description
+```
+
+### Push Frequency
+
+- Push to `origin/cursor-dev` after every significant change
+- Never let local commits accumulate for more than a few hours
+- Always push before ending a work session
+
+### Merge Conflicts
+
+If merge conflicts occur when syncing with `develop`:
+
+1. Resolve conflicts within your worktree
+2. Test thoroughly after resolution
+3. Commit the merge with clear message
+4. Push to `origin/cursor-dev`
+
+---
+
+## 7. Verification Commands
+
+### Quick Status Check
+
+Run this command block to verify your environment:
+
+```bash
+echo "=== Worktree Status ==="
+pwd
+echo ""
+echo "=== Current Branch ==="
+git branch --show-current
+echo ""
+echo "=== All Worktrees ==="
+git worktree list
+echo ""
+echo "=== Git Status ==="
+git status
+```
+
+Expected output:
+- pwd: `/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/cursor`
+- branch: `cursor-dev`
+- worktree list shows `cursor-dev` at `_worktrees/cursor`
+
+### Verify File Path
+
+To verify a file is within your worktree:
+
+```bash
+realpath <file-path> | grep "_worktrees/cursor"
+```
+
+If this returns empty, the file is **outside your worktree** - do NOT modify it.
+
+---
+
+## 8. Emergency Procedures
+
+### If You Accidentally Modify Wrong Files
+
+1. **STOP immediately**
+2. Do NOT commit the changes
+3. Discard changes with:
+   ```bash
+   git checkout -- <file-path>
+   ```
+4. Verify you're in the correct worktree
+5. Inform the user of the mistake
+
+### If Branch Gets Switched
+
+1. **STOP all operations**
+2. Switch back to `cursor-dev`:
+   ```bash
+   git checkout cursor-dev
+   ```
+3. Verify worktree integrity:
+   ```bash
+   git worktree list
+   ```
+4. If worktree is broken, inform the user immediately
+
+### If Worktree Gets Corrupted
+
+1. **STOP all operations**
+2. Do NOT attempt to fix it yourself
+3. Inform the user with:
+   - What happened
+   - Current worktree status (`git worktree list`)
+   - Current directory (`pwd`)
+   - Current branch (`git branch --show-current`)
+
+---
+
+## 9. Multi-IDE Coordination
+
+### Understanding the Environment
+
+This repository has multiple IDE worktrees:
+
+| IDE | Folder | Branch | Purpose |
+|-----|--------|--------|---------|
+| **Cursor** | `_worktrees/cursor/` | `cursor-dev` | Your workspace |
+| Antigravity | `_worktrees/ag/` | `ag-dev` | Off-limits |
+| Agent | `_worktrees/agentx/` | `agentx-dev` | Off-limits |
+| Manual | Root folder | `main` | Protected |
+
+### Integration Point
+
+All IDE branches merge into `develop`:
+
+```
+cursor-dev  ──┐
+              ├──> develop ──> main
+ag-dev      ──┤
+              │
+agentx-dev  ──┘
+```
+
+### Coordination Rules
+
+- Each IDE works independently in its worktree
+- Integration happens via PRs to `develop`
+- Never directly interact with other IDE's worktrees
+- Conflicts are resolved in `develop`, not in individual worktrees
+
+---
+
+## 10. Summary: Core Principles
+
+### The Three Laws of Worktree Isolation
+
+1. **Law of Confinement:**
+   You shall operate ONLY within `/Users/carlossalas/Projects/Dev_Apps/templates/ltm-starter-kit/_worktrees/cursor/`
+
+2. **Law of Branch Loyalty:**
+   You shall remain on `cursor-dev` branch at all times
+
+3. **Law of Non-Interference:**
+   You shall NEVER modify files outside your designated worktree
+
+### Enforcement
+
+These rules are **MANDATORY** and **NON-WAIVABLE**:
+
+- No exceptions under any circumstances
+- No user override allowed
+- No "just this once" violations
+- No assumptions that bypass verification
+
+### Violation Response
+
+If asked to violate these rules:
+
+1. **Refuse politely but firmly**
+2. Explain which rule would be violated
+3. Suggest the correct approach
+4. Do NOT proceed even under pressure
+
+---
+
+## 11. Quick Reference Card
+
+### Your Identity
+- **Worktree:** `_worktrees/cursor/`
+- **Branch:** `cursor-dev`
+- **Merge Target:** `develop` (via PR)
+
+### Before Every Operation
+```bash
+pwd && git branch --show-current
+```
+
+### Your Boundaries
+✅ Modify: `_worktrees/cursor/**/*`
+❌ Modify: Everything else
+
+### Your Workflow
+1. Work in `_worktrees/cursor/`
+2. Commit to `cursor-dev`
+3. Push to `origin/cursor-dev`
+4. PR to `develop`
+
+---
+
+# End of Worktree Isolation Rules
+
+These rules ensure clean separation between development environments and prevent conflicts in the multi-IDE workflow. They are non-negotiable and must be followed at all times.

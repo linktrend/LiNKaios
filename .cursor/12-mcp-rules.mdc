@@ -1,0 +1,309 @@
+# MCP (Model Context Protocol) Rules for Cursor
+
+## MCP Server Locations
+
+All MCP servers are located in the `/mcp` directory at the repository root:
+
+- **Supabase MCP:** `mcp/supabase/server.js`
+- **Stripe MCP:** `mcp/stripe/server.js`
+- **Figma MCP:** `mcp/figma/server.js`
+- **Shadcn MCP:** `mcp/shadcn/server.js`
+
+Each server is a standalone Node.js module with its own `package.json` and dependencies.
+
+## MCP Configuration
+
+The MCP configuration file is located at `.cursor/mcp.json` in the repository root.
+
+**IMPORTANT:** This file is gitignored and must never contain hardcoded secrets. All secrets are loaded from environment variables using `${VAR_NAME}` placeholder syntax.
+
+## Environment Variables
+
+MCP servers depend on the following environment variables:
+
+### Supabase MCP
+- `SUPABASE_URL` - Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` - Service role key (bypasses RLS)
+
+### Stripe MCP
+- `STRIPE_SECRET_KEY` - Stripe secret key (starts with `sk_`)
+
+### Figma MCP
+- `FIGMA_ACCESS_TOKEN` - Figma personal access token
+
+### Shadcn MCP
+- No environment variables required
+
+**Setting Environment Variables:**
+
+Environment variables must be set in the shell **before** launching Cursor. Add them to your shell profile (`~/.zshrc` or `~/.bashrc`) or set them before launching:
+
+```bash
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_SERVICE_ROLE_KEY="your-key"
+export STRIPE_SECRET_KEY="sk_test_..."
+export FIGMA_ACCESS_TOKEN="figd_..."
+```
+
+## Available MCP Tools
+
+### Supabase MCP (SupabaseMCP)
+
+**Tools:**
+- `ping` - Health check and connection verification
+- `listTables` - List tables in specified schemas
+- `listSchemas` - List all database schemas
+- `select` - Execute SELECT queries
+- `executeSQL` - Execute arbitrary SQL (use with caution)
+
+**Usage:**
+```
+call SupabaseMCP.ping
+call SupabaseMCP.listTables {"schemas": ["public"]}
+call SupabaseMCP.select {"table": "users", "limit": 10}
+call SupabaseMCP.executeSQL {"query": "SELECT * FROM users WHERE id = 1"}
+```
+
+### Stripe MCP (StripeMCP)
+
+**Tools:**
+- `ping` - Health check
+- `listProducts` - List Stripe products
+- `listCustomers` - List Stripe customers
+
+**Usage:**
+```
+call StripeMCP.ping
+call StripeMCP.listProducts {"limit": 20, "active": true}
+call StripeMCP.listCustomers {"limit": 10, "email": "user@example.com"}
+```
+
+### Figma MCP (FigmaMCP)
+
+**Tools:**
+- `ping` - Health check and authentication
+- `listFiles` - List files in a Figma project
+- `getFile` - Get detailed file information
+
+**Usage:**
+```
+call FigmaMCP.ping
+call FigmaMCP.listFiles {"projectId": "123456"}
+call FigmaMCP.getFile {"fileId": "abc123", "depth": 2}
+```
+
+### Shadcn MCP (ShadcnMCP)
+
+**Tools:**
+- `ping` - Health check
+- `listComponents` - List available shadcn/ui components
+- `getComponent` - Get component source code
+
+**Usage:**
+```
+call ShadcnMCP.ping
+call ShadcnMCP.listComponents {"installedOnly": true}
+call ShadcnMCP.getComponent {"name": "button"}
+```
+
+## Restarting MCP Servers
+
+MCP servers are started automatically when Cursor launches. To restart them:
+
+1. **Quit Cursor completely** (Cmd+Q on macOS, not just close window)
+2. Ensure environment variables are set in your shell
+3. Launch Cursor from that shell
+4. Wait 10-15 seconds for servers to initialize
+
+**Verifying Server Status:**
+```
+mcp servers
+```
+
+This command lists all connected MCP servers.
+
+## Testing MCP Servers
+
+After starting Cursor, test each server with ping commands:
+
+```
+call SupabaseMCP.ping
+call StripeMCP.ping
+call FigmaMCP.ping
+call ShadcnMCP.ping
+```
+
+All should return `{"status": "ok", ...}` with additional metadata.
+
+## Using MCP Tools in Cursor
+
+### Method 1: Direct Tool Calls
+
+Use the `call` command in Cursor's AI chat:
+
+```
+call ServerName.toolName {"arg1": "value1", "arg2": "value2"}
+```
+
+### Method 2: Natural Language
+
+Ask Cursor to use MCP tools naturally:
+
+```
+"Use Supabase MCP to list all tables in the public schema"
+"Use Stripe MCP to show me the first 10 customers"
+"Use Shadcn MCP to show me the button component code"
+```
+
+Cursor will automatically invoke the appropriate MCP tools.
+
+### Method 3: Command Palette
+
+1. Open command palette (Cmd+Shift+P)
+2. Type "MCP"
+3. Select "MCP: Call Tool"
+4. Choose server and tool
+5. Provide arguments
+
+## Troubleshooting
+
+### Server Not Connecting
+
+**Symptoms:** `Error: MCP server "ServerName" not found`
+
+**Solutions:**
+1. Check `.cursor/mcp.json` exists and is valid JSON
+2. Restart Cursor completely
+3. Verify server paths are correct
+4. Check server logs in Developer Tools (Help > Toggle Developer Tools)
+
+### Environment Variable Errors
+
+**Symptoms:** `Error: VARIABLE_NAME must be set`
+
+**Solutions:**
+1. Verify variable is set: `echo $VARIABLE_NAME`
+2. Launch Cursor from a shell with variables set
+3. Add variables to shell profile and restart terminal
+4. Check for typos in variable names
+
+### Authentication Failures
+
+**Symptoms:** `401 Unauthorized` or `authenticated: false`
+
+**Solutions:**
+1. Verify API keys/tokens are correct
+2. Check for whitespace in environment variables
+3. Ensure correct key type (service role, secret key, etc.)
+4. Regenerate tokens if expired
+
+### Tools Not Working
+
+**Symptoms:** Tool calls fail or return errors
+
+**Solutions:**
+1. Test with `ping` command first
+2. Check tool arguments match expected schema
+3. Verify API permissions for your keys
+4. Check service status (Supabase, Stripe, Figma)
+
+## Development Guidelines
+
+### When to Use MCP Tools
+
+**Use MCP tools for:**
+- Database queries and migrations (Supabase)
+- Payment/subscription operations (Stripe)
+- Design file access (Figma)
+- Component management (Shadcn)
+
+**Don't use MCP tools for:**
+- Client-side operations (use direct API calls)
+- High-frequency operations (MCP has overhead)
+- Operations requiring user interaction
+
+### Security Considerations
+
+1. **Never commit `.cursor/mcp.json` with secrets**
+2. **Use service/secret keys, not public keys**
+3. **Rotate keys after team member changes**
+4. **Monitor API usage in service dashboards**
+5. **Use read-only keys when possible**
+
+### Adding New Tools
+
+To add a new tool to an existing server:
+
+1. Edit `mcp/[server]/server.js`
+2. Add tool definition to `TOOLS` array
+3. Add handler in `CallToolRequestSchema` switch statement
+4. Restart Cursor to load changes
+
+### Creating New MCP Servers
+
+To add a new MCP server:
+
+1. Create directory: `mcp/new-service/`
+2. Add `package.json` with MCP SDK dependency
+3. Create `server.js` implementing MCP protocol
+4. Install dependencies: `cd mcp/new-service && npm install`
+5. Add configuration to `.cursor/mcp.json`
+6. Set required environment variables
+7. Restart Cursor
+
+## Best Practices
+
+1. **Always test with `ping` first** - Verify connectivity before using tools
+2. **Use specific queries** - Don't fetch all data, use limits and filters
+3. **Handle errors gracefully** - MCP tools can fail, check responses
+4. **Document new tools** - Update this file when adding tools
+5. **Keep servers lightweight** - MCP servers should be fast and focused
+6. **Log operations** - Use server console.error for debugging
+7. **Version dependencies** - Pin versions in package.json
+
+## MCP Protocol Reference
+
+MCP servers communicate using JSON-RPC over stdio. Each server must:
+
+1. Import `@modelcontextprotocol/sdk`
+2. Create a `Server` instance
+3. Register tool handlers with `setRequestHandler`
+4. Connect via `StdioServerTransport`
+5. Handle `ListToolsRequestSchema` (list available tools)
+6. Handle `CallToolRequestSchema` (execute tool calls)
+
+See existing servers in `mcp/` for implementation examples.
+
+## Additional Resources
+
+- **MCP README:** `mcp/README.md` - Detailed setup and troubleshooting
+- **MCP Protocol:** https://modelcontextprotocol.io/
+- **Cursor Docs:** https://docs.cursor.com/mcp
+- **Service Docs:** See respective service documentation
+
+## Maintenance
+
+**Updating Dependencies:**
+```bash
+cd mcp/[server-name]
+npm update
+npm install
+```
+
+**Testing Servers Manually:**
+```bash
+export SUPABASE_URL="..."
+export SUPABASE_SERVICE_ROLE_KEY="..."
+node mcp/supabase/server.js
+```
+
+**Checking Logs:**
+- Open Cursor Developer Tools (Help > Toggle Developer Tools)
+- Check Console for MCP server output
+- Server errors appear with `[MCP]` prefix
+
+---
+
+**Last Updated:** 2025-01-13  
+**Maintained By:** LTM Starter Kit Team
+

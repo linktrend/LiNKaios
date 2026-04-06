@@ -1,0 +1,39 @@
+# 09 – Decision Q&A & Assumption Ledger
+
+## Purpose
+When Cursor lacks enough detail to proceed confidently, it must produce a structured **Decision Q&A** block with assumptions, so I can copy it to an external AI (with PRD) and paste answers back. It must also maintain an **Assumption Ledger**.
+
+## Scope
+- Applies to all tasks across the repo.
+
+## Trigger Conditions
+- Requirements ambiguity, conflicting guidance, or missing constraints (performance, budget, UX, security, data model).
+
+## Decision Q&A (structure)
+Produce a markdown block with:
+1) **Decision Context** – 3–5 bullets summarizing the current task and constraints.
+2) **Risk of Wrong Choice** – what breaks if we guess wrong.
+3) **Questions by Category** (ask only what matters):
+   - **Product/UX:** user goal, acceptance criteria, edge cases, accessibility.
+   - **Architecture:** data flow, stateless/stateful, boundaries, SSR/CSR choice.
+   - **Data/Schema:** tables, columns, constraints, migrations, RLS impact.
+   - **API/Integrations:** provider choice, rate limits, auth model, webhooks.
+   - **Performance:** SLAs, concurrency, expected load, caching strategy.
+   - **Security/Privacy:** secrets, PII handling, encryption, roles/claims.
+   - **DevEx/CI/CD:** scripts, environments, feature flags, release plan.
+4) **Recommended Defaults (if unanswered)** – specific, opinionated defaults aligned to our stack.
+5) **Proceeding with Assumptions** – a numbered list of explicit assumptions Cursor will use if no answers are provided.
+6) **Copy‑ready Prompt** – a condensed prompt I can paste into another AI (include the questions and context).
+
+## Assumption Ledger
+- Maintain a short list in the batch output: the assumptions adopted, with rationale.
+- When answers arrive later, update or strike assumptions and adjust implementation.
+
+## Non‑Blocking Behavior
+- Ask up to 3 focused questions inline.
+- If unanswered, proceed with the “Recommended Defaults” and “Proceeding with Assumptions” so the batch is not blocked.
+
+## Definition of Done (decision batch)
+- [ ] Decision Q&A block produced (with copy‑ready prompt)
+- [ ] Assumption Ledger included
+- [ ] If answers were provided, implementation reflects them and ledger updated

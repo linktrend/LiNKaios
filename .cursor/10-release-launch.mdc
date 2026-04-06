@@ -1,0 +1,103 @@
+# 10 – Release & Launch Guide
+
+## Purpose
+Guide a non‑expert, solo founder through safe, step‑by‑step releases for web (Vercel), mobile (Expo EAS), backend (Supabase), and automations (n8n on VPS).
+
+## Scope
+- Applies across the repo when preparing **staging** or **production** launches.
+- Use **@10-release-launch** in Cursor when you want to ship a version.
+
+## Environments & Tracks
+- **dev** (local), **staging** (pre‑prod), **production** (live).
+- Versioning: semantic (`vMAJOR.MINOR.PATCH`); keep `CHANGELOG.md` updated.
+
+## Global Pre‑Flight (must pass before any launch)
+- [ ] `pnpm typecheck` ✅
+- [ ] `pnpm test` (unit/integration) ✅
+- [ ] E2E (Playwright for web, Detox for mobile if applicable) ✅
+- [ ] `pnpm lint` + `pnpm format --check` ✅
+- [ ] Build(s): `pnpm build` (web/packages) ✅; EAS preview build compiles ✅
+- [ ] Supabase migrations linted; rollback note present
+- [ ] `.env` and `.env.example` aligned; **no secrets** in code
+- [ ] Sentry DSNs / PostHog keys set for target env
+- [ ] README/USAGE updated if user‑visible changes
+- [ ] CHANGELOG.md entry written
+
+## Web (Next.js on Vercel) – Step‑by‑Step
+1) **Prepare**: confirm env vars in Vercel (`vercel env pull`/dashboard); link project.
+2) **Create Preview**: open PR to `main` or release branch; Vercel builds a Preview.
+3) **Smoke Test Preview**: run Playwright against preview URL; verify auth, critical flows.
+4) **Migrate**: if DB changes, apply migrations to **staging** DB and validate.
+5) **Promote**: when approved, **Promote Preview to Production** in Vercel.
+6) **Post‑Deploy Checks**: health page, logs (Vercel, Sentry), critical paths manual click‑through.
+7) **Rollback**: if needed, revert to previous deployment in Vercel; back out DB changes per rollback note.
+
+### Web Commands (illustrative)
+- `pnpm build`
+- `pnpm e2e:web`
+- `vercel pull && vercel deploy --prebuilt` (or via dashboard)
+- Promote via dashboard (safer for non‑experts).
+
+## Mobile (Expo + EAS) – Step‑by‑Step
+1) **Version Bumps**: update app version + build numbers (`app.json`/`app.config.ts`).
+2) **Profiles**: ensure `eas.json` profiles (`development`, `preview`, `production`) exist.
+3) **Secrets**: confirm keystores / credentials managed by EAS; set env for target channel.
+4) **Assets/Manifests**: icons, splash, privacy manifests/permissions updated.
+5) **Build**: `eas build --platform ios --profile preview` / `--platform android`.
+6) **Distribute**: `eas submit …` to TestFlight / Play Console internal testing.
+7) **QA**: test on physical devices; run Detox on CI if configured.
+8) **Release**: promote to production (staged rollout on Android recommended).
+9) **Hotfix**: for critical issues, bump patch and rebuild/submit.
+
+### Mobile Commands
+- `eas build --platform ios --profile preview`
+- `eas submit --platform ios --profile preview`
+- Repeat for Android; then promote in store consoles.
+
+## Supabase – Step‑by‑Step
+1) **Backup**: take a snapshot or export SQL of the target DB.
+2) **Apply Migrations**: run staged migrations; verify RLS and policies.
+3) **Edge Functions**: deploy (`supabase functions deploy <name>`); test via curl.
+4) **Realtime/Triggers**: confirm they’re quiet under expected load.
+5) **Rollback**: follow the migration’s rollback note; restore snapshot if needed.
+
+## n8n (VPS) – Step‑by‑Step
+1) **Credentials**: verify all credentials in n8n are set for target env.
+2) **Deploy/Update Workflows**: import JSON; set triggers (webhook/cron).
+3) **Dry Run**: execute with fixture payloads; guard with idempotency keys.
+4) **Observability**: ensure logs + alerts are enabled.
+5) **Rollback**: disable the workflow or roll back to previous export on failure.
+
+## Launch Orchestration – What Cursor Must Do When @10-release-launch is Invoked
+1) **Batch Header**: show target env, version tag, affected areas (web/mobile/db/n8n).
+2) **Plan**: produce a numbered, cross‑platform plan tailored to what changed.
+3) **Pre‑Flight Checklist**: generate and run commands; paste outputs; mark PASS/FAIL.
+4) **Environment Diffs**: list env vars needed in Vercel, EAS, Supabase, n8n; highlight missing.
+5) **Secrets Check**: confirm `.env` vs dashboard values; never print secret values.
+6) **Run Books**:
+   - **Web**: preview → smoke test → promote → post‑checks → rollback steps.
+   - **Mobile**: bump → build → submit → QA → release → staged rollout → hotfix path.
+   - **Supabase**: backup → migrate → validate → rollback note.
+   - **n8n**: credentials → import → dry run → enable → alert hooks.
+7) **Smoke Tests**: create/run minimal smoke tests for the changed features; output results.
+8) **Comms Pack** (optional): draft release notes + CHANGELOG entry + status update.
+9) **Go/No‑Go Hold Points**: stop at key checkpoints to ask for explicit approval before proceeding.
+10) **Rollback Plan**: present exact rollback commands/buttons for each surface.
+
+## Post‑Release
+- Monitor Sentry/PostHog dashboards for 30–60 minutes.
+- Verify business KPIs (signups, conversions, retention signals).
+- If incident: generate an **Incident Briefing Pack** (use 08‑troubleshooting) and execute rollback/hotfix.
+
+## Definition of Done (Release)
+- [ ] All pre‑flights PASS; artifacts built
+- [ ] Target env configured; secrets verified
+- [ ] Web promoted / Mobile released / DB migrated / n8n enabled as applicable
+- [ ] Smoke tests PASS; monitoring clean
+- [ ] CHANGELOG.md updated; tag created (e.g., `vX.Y.Z`)
+
+## Cursor‑Specific Behavior
+- Keep instructions concise and checkbox‑driven.
+- Paste exact commands and clickable dashboard paths.
+- Never proceed past **Go/No‑Go** gates without confirmation.
+- Redact secrets; include only keys and where to set them.

@@ -1,0 +1,73 @@
+# 03 – Mobile (React Native with Expo)
+
+## Purpose
+Standards for the mobile app in `apps/mobile` using React Native with Expo, TypeScript, and EAS Build/Submit for delivery to iOS/Android app stores.
+
+## Scope
+- Applies to files in `apps/mobile/**`.
+
+## Architecture & Conventions
+- Use **Expo Router** for navigation and file-based routing under `apps/mobile/app/*`.
+- Keep screens under `app/` with clear segment folders. Co-locate UI pieces with screens when small; move larger reusable components into `packages/ui`.
+- Use functional components with hooks; avoid class components.
+- Favor React Query (TanStack Query) for remote data; centralize query keys for consistency.
+- Apply Zod for schema validation at network and form boundaries.
+
+## Styling & UI
+- Use **NativeWind** (Tailwind for React Native) or StyleSheet API for styling.
+- Maintain design consistency with `packages/ui` (shared where possible).
+- Ensure responsiveness: test layouts across iOS and Android form factors.
+
+## Auth (Supabase)
+- Use Supabase Auth with the Expo client SDK.
+- Ensure secure storage of tokens (e.g., SecureStore). Do not store sensitive data in AsyncStorage.
+- Enforce role-based access in Supabase; client code must not bypass server rules.
+
+## Error Handling
+- Use typed error boundaries and clear user-facing messages.
+- Log errors with context (screen, operation, ids).
+
+## Performance
+- Avoid unnecessary re-renders (memoize where appropriate).
+- Use FlatList/SectionList for lists; never map directly over large arrays in render.
+- Lazy load heavy components and screens.
+
+## File/Folder Guidance
+- `app/*` – screens (routed via Expo Router).
+- `components/*` – mobile-specific components (not in `packages/ui`).
+- `hooks/*` – custom hooks.
+- `lib/*` – mobile-specific utilities.
+
+## Scripts (mobile)
+Provide/maintain in `apps/mobile/package.json`:
+- `dev` – Start Expo dev server
+- `build` – Expo build (EAS)
+- `lint` – ESLint (extends repo config)
+- `test` – Unit tests (Vitest for utilities/hooks)
+- `e2e` – Detox E2E tests
+
+## Testing (mobile)
+- Unit tests (Vitest) for hooks/utilities/components.
+- E2E tests (Detox) for flows: login, navigation, CRUD, offline scenarios.
+- Ensure CI runs `test` and `e2e` for `apps/mobile` on pull requests affecting mobile files.
+
+## EAS Build & Submit
+- Configure EAS for building and submitting apps to iOS and Android stores.
+- Keep `eas.json` at repo root; configure development, preview, and production profiles.
+
+## Definition of Done (mobile batch)
+Before marking a mobile batch complete:
+- [ ] All acceptance criteria met for `apps/mobile`
+- [ ] Type-checks pass for mobile
+- [ ] Mobile unit tests & Detox E2E tests pass
+- [ ] ESLint/Prettier pass
+- [ ] Layouts tested on iOS & Android simulators/devices
+
+## Cursor-Specific Behaviors
+- At batch start, output a **Batch Header** referencing the exact files in `apps/mobile/**` touched.
+- When adding screens/components, prefer `packages/ui` if they could be reused; otherwise place under `apps/mobile/components`.
+- Show Zod schemas when validating inputs (e.g., forms, API responses).
+- When wiring Supabase Auth, show where tokens are stored and how role-based checks are enforced.
+
+## Conflict Resolution
+- If rules here conflict with `01-foundation.mdc` or global rules, surface the conflict and propose a resolution in the Batch Header.
