@@ -8,7 +8,7 @@ const EnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_SECRET_NAME: z
     .string()
     .default("LINKTREND_AIOS_PROD_SUPABASE_SERVICE_ROLE"),
-  N8N_WEBHOOK_URL: z.string().url(),
+  N8N_WEBHOOK_URL: z.string().url().optional(),
   LINKTREND_AIOS_PROD_POSTMARK_SERVER_TOKEN: z.string().min(20).optional(),
   POSTMARK_SERVER_TOKEN_SECRET_NAME: z
     .string()

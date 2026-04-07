@@ -1,6 +1,8 @@
 # LiNKdroplet Admin Control Plane Bundle
 
-This bundle runs Paperclip + LiNKaios behind a Supabase-authenticated gateway.
+Runs **Paperclip** + **LiNKaios** behind **Caddy** and **oauth2-proxy** (Supabase OIDC).
+
+**Operator overview (Tailscale, TLS email, GSM key file):** [LiNKdroplet control plane](../../../docs/infra/LINKDROPLET_CONTROL_PLANE.md)
 
 ## Security contract
 
@@ -12,42 +14,22 @@ This bundle runs Paperclip + LiNKaios behind a Supabase-authenticated gateway.
 
 ## Runtime env contract
 
-- **`.env.runtime`** on the droplet holds operator-facing secrets (OAuth2 Proxy, Paperclip `BETTER_AUTH_SECRET`) and **non-secret** config plus **`*_SECRET_NAME`** pointers for LiNKaios GSM resolution.
-- **Never commit** `.env.runtime`. Use **`.env.runtime.example`** as the template.
-- LiNKaios loads credential **values** from Google Secret Manager using the service account mounted at `GOOGLE_APPLICATION_CREDENTIALS` (see compose + example).
+- **`.env.runtime`** on the droplet holds Caddy/oauth2-proxy/Paperclip secrets and LiNKaios **non-secret** config plus **`*_SECRET_NAME`** for GSM-backed values.
+- **Never commit** `.env.runtime`. Start from **`.env.runtime.example`**.
 
-## Bootstrap on LiNKdroplet-00 (first time)
+## Bootstrap on LiNKdroplet-00
 
-1. **GCP service account key (read GSM)**  
-   - Save the JSON as **`/opt/linktrend/secrets/gcp-sa.json`** on the droplet.  
-   - `chmod 600` and owner readable by root (Docker mounts this path into `linkaios`).
-
-2. **Environment file**  
-   - From repo root or this directory:  
-     `cp infra/droplet-admin/control-plane/.env.runtime.example infra/droplet-admin/control-plane/.env.runtime`  
-   - Edit `.env.runtime`: replace every `REPLACE_*` and set real URLs (FQDN, Supabase ref, n8n URL, OIDC client, cookie secret, `BETTER_AUTH_SECRET`).
-
-3. **Supabase OIDC for oauth2-proxy**  
-   - Register an OIDC client in Supabase (or your IdP) compatible with oauth2-proxy.  
-   - `OAUTH2_PROXY_OIDC_ISSUER_URL` is typically `https://<project-ref>.supabase.co/auth/v1`.  
-   - `OAUTH2_PROXY_REDIRECT_URL` must be exactly `https://<your FQDN>/oauth2/callback`.
-
-4. **Bring up**
+1. **GSM reader key:** save JSON as **`/opt/linktrend/secrets/gcp-sa.json`**, `chmod 600` (mounted into the `linkaios` container; see [doc](../../../docs/infra/LINKDROPLET_CONTROL_PLANE.md)).
+2. **Env file:** `cp .env.runtime.example .env.runtime` in this directory; set `TLS_EMAIL`, `REPLACE_PROJECT_REF`, OIDC client fields, random secrets, and `SUPABASE_URL` to match your single Supabase project.
+3. **Bring up** (from repo root on the server):
 
 ```bash
 cd /opt/linktrend/repo/linkaios
 docker compose -f infra/droplet-admin/control-plane/docker-compose.yml up -d --build
 ```
 
-## Required env keys (summary)
-
-- **Caddy:** `PUBLIC_HOSTNAME`, `TLS_EMAIL`
-- **oauth2-proxy:** `OAUTH2_PROXY_PROVIDER`, `OAUTH2_PROXY_OIDC_ISSUER_URL`, `OAUTH2_PROXY_CLIENT_ID`, `OAUTH2_PROXY_CLIENT_SECRET`, `OAUTH2_PROXY_COOKIE_SECRET`, `OAUTH2_PROXY_REDIRECT_URL`, plus defaults in `.env.runtime.example`
-- **Paperclip:** `PAPERCLIP_PUBLIC_URL`, `BETTER_AUTH_SECRET`
-- **LiNKaios:** `SUPABASE_URL`, `N8N_WEBHOOK_URL`, `OLLAMA_EMBEDDING_URL`, GSM project + key path, and `*_SECRET_NAME` entries as in the example
-
 ## Verify
 
-- Gateway reachable over HTTPS.
-- Unauthenticated access is redirected to login.
-- Authenticated session can access Paperclip UI and `/aios/health`.
+- Gateway over HTTPS (Tailscale hostname).
+- Unauthenticated users redirected to login.
+- After login: Paperclip UI and **`/aios/health`** (see `docs/runbooks/CONTROL_PLANE_OPERATIONS.md`).

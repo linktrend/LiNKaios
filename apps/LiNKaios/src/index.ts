@@ -692,7 +692,7 @@ app.post("/events/urgent", async (req, res) => {
     return res.status(202).json({
       accepted: true,
       source: payload.source ?? "webhook",
-      forwardedTo: env.N8N_WEBHOOK_URL
+      forwardedTo: env.N8N_WEBHOOK_URL ?? null
     });
   } catch (error) {
     return res.status(400).json({

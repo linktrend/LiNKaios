@@ -1,5 +1,7 @@
 # LiNKaios/Paperclip Control Plane Operations (LiNKdroplet Admin)
 
+Architecture and terminology (Tailscale hostname, TLS email, GSM key): [LiNKdroplet control plane](../infra/LINKDROPLET_CONTROL_PLANE.md).
+
 ## Bootstrap
 1. Prepare `.env.runtime` with non-secret config and GSM secret identifiers (`*_SECRET_NAME`) only.
 2. Ensure Tailscale is connected and firewall allows only intended ingress paths.
