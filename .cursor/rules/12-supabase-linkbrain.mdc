@@ -1,0 +1,59 @@
+---
+description: "LiNKbrain memory plane: Supabase schemas, RLS, migrations, vector search"
+globs: "packages/linkbrain/**,supabase/**"
+---
+
+# LiNKbrain (Supabase Memory Plane)
+
+## Scope
+
+Applies to `packages/linkbrain/**` and `supabase/**`.
+
+## Schemas
+
+| Schema | Purpose |
+|--------|---------|
+| `lb_core` | Tenant registry and shared guardrail helpers |
+| `lb_shared` | Long-term collective knowledge and audit trail |
+| `lb_scratch` | Transient agent working memory |
+
+## Required Tables
+
+- `lb_core.tenants`
+- `lb_shared.missions`, `lb_shared.policies`, `lb_shared.proposals`
+- `lb_shared.lessons`, `lb_shared.audit_runs`
+- `lb_scratch.entries`
+
+## Core Principles
+
+- **Typed end-to-end:** generate and consume types from the database.
+- **RLS first:** every table must have RLS enabled with explicit policies. No table may remain publicly accessible unless intentional.
+- **Least privilege:** APIs and functions operate with the minimum role/scopes required.
+- **Tenant isolation:** every row includes `tenant_id`. Missing tenant context must hard-fail.
+
+## Access Pattern
+
+- Agents are forbidden from direct table access.
+- All data operations go through `SECURITY DEFINER` RPC functions.
+- Every cross-system call must validate `tenant_id` and identity context.
+- The canonical envelope for cross-agent handoffs: `tenant_id`, `run_id`, `task_id`, `dpr_id`.
+
+## Migrations
+
+- All changes ship via migration files under `supabase/migrations/*`.
+- Naming: `YYYYMMDDHHMM__short_description.sql`
+- Each migration includes: up migration (idempotent), rollback notes, brief rationale.
+- Validate with `supabase db lint` before applying.
+- Never mutate schemas directly in production.
+
+## Vector Search
+
+- `pgvector` enabled with `nomic-embed-text` embeddings (768 dimensions).
+- Embeddings are columns on domain tables (`missions`, `policies`, `proposals`, `lessons`).
+- Embedding model hosted on Mac Mini via Ollama.
+
+## Memory Promotion
+
+- Source: `lb_scratch.entries`
+- Auto-promotion threshold: confidence >= 0.85
+- Auto-promoted entries marked `requires_review` for governance approval.

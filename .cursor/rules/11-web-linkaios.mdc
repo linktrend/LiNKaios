@@ -1,0 +1,49 @@
+---
+description: "Next.js App Router rules for the LiNKaios control plane web UI"
+globs: "apps/LiNKaios/**"
+---
+
+# LiNKaios Web UI (Next.js App Router)
+
+## Scope
+
+Applies to files in `apps/LiNKaios/**`.
+
+## Architecture
+
+- Use the **App Router** with server components by default.
+- Client components only when required (stateful UI, browser APIs, event handlers).
+- Prefer **Server Actions** for mutations; API routes under `app/api/*` when needed.
+- Centralize environment access via a typed config module — do not read `process.env` directly in components.
+
+## Routing
+
+- Organize routes under `apps/LiNKaios/app/*` with clear segment folders.
+- Co-locate `page.tsx`, `layout.tsx`, `loading.tsx`, and route-specific components in the same segment.
+
+## Styling & UI
+
+- Tailwind CSS for all styling.
+- shadcn/ui for primitives. Compose rather than fork.
+- Accessibility: semantic HTML, ARIA, keyboard navigation, visible focus states.
+- Mobile-first responsive layouts.
+- Use Impeccable design principles: avoid generic AI-looking UI, tinted neutrals instead of pure gray, no overused fonts, no cards-inside-cards.
+
+## Data Fetching
+
+- Server components: fetch data directly with async/await; cache where appropriate.
+- Client components: use TanStack Query for remote state with centralized query keys.
+- Validate all inputs and external responses with Zod. Return typed data only.
+
+## Auth (Supabase)
+
+- Use Supabase Auth helpers for Next.js.
+- Handle sessions on the server when possible; avoid exposing tokens to the client.
+- Protect server actions and API routes with auth checks.
+
+## Performance
+
+- Avoid unnecessary client components.
+- Use dynamic import for heavy components.
+- Use `next/image` for all images.
+- Enable route-level streaming where beneficial.
