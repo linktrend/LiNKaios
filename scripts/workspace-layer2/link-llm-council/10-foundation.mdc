@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# link-llm-council Foundation
+
+LiNKtrend fork of **LLM Council** / LiNKboard-style deliberation stack: Python backend + Vite/React frontend. Used for strategic multi-model synthesis in the AIOS narrative.
+
+## Layout
+
+- `backend/` — API, council logic, storage, OpenRouter integration
+- `frontend/` — Vite React UI
+- Root Python project (`pyproject.toml`, `uv` where used)

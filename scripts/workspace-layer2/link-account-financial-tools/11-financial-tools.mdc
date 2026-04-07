@@ -1,0 +1,10 @@
+---
+description: "Account and financial tools codebase"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Implementation
+
+- Prefer small, reviewable changes; preserve upstream test and lint commands documented in this repo.
+- No secrets in source; use env placeholders aligned with `docs/SECRET_MANAGEMENT.md` naming in LiNKaios.

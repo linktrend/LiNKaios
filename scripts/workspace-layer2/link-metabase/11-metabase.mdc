@@ -1,0 +1,10 @@
+---
+description: "Metabase source tree"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Prefer minimal diffs scoped to one subsystem; run Metabase’s CI-equivalent checks locally when touching that area.
+- Database and license secrets only via env / GSM at deploy.

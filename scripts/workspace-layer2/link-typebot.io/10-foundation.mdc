@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-typebot.io Foundation
+
+LiNKtrend fork of **Typebot** (conversational flows / bots). Usually TypeScript monorepo (Next, builder, viewer); follow upstream pnpm/bun scripts and env templates.

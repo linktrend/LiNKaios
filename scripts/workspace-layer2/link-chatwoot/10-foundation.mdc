@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+# link-chatwoot Foundation
+
+LiNKtrend fork of **Chatwoot** (Rails + Vue/customer support stack). Ruby backend, Sidekiq, and frontend assets follow upstream conventions.
+
+## Role
+
+- **Customer-facing support** channel stack for ventures—distinct from internal agent comms (Zulip/Slack) in product positioning.

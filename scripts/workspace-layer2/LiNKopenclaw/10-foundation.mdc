@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+# LiNKopenclaw (link-openclaw) Foundation
+
+LiNKtrend fork of **OpenClaw**: TypeScript **gateway** and tooling for a personal AI assistant across many channels. Monorepo with `src/`, apps, extensions, docs, and bundled skills.
+
+## Conventions
+
+- Gateway and Pi runtime code live under `src/`; follow upstream module boundaries.
+- Extensions under `extensions/` are optional capabilities—keep plugin seams clean.

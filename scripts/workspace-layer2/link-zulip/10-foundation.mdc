@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+# link-zulip Foundation
+
+LiNKtrend fork of **Zulip** server and web app—large Python/Django + TypeScript codebase with many submodules and tooling paths per upstream.
+
+## Conventions
+
+- Follow Zulip’s documented dev setup (Vagrant, tools, linters) for non-trivial changes.
+- Internal comms product for LiNKtrend—keep fork-only patches clearly separated for upstream sync.

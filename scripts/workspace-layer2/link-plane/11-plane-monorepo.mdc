@@ -1,0 +1,10 @@
+---
+description: "Plane apps and packages"
+globs: "apps/**,packages/**"
+alwaysApply: false
+---
+
+# Monorepo work
+
+- Follow Plane’s existing lint/test CI expectations; do not disable checks to “unblock” local edits.
+- LiNKtrend deployment overlays live under `deployments/` when present—document env per deployment README.

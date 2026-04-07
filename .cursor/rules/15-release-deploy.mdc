@@ -1,0 +1,79 @@
+---
+description: "Release and deployment procedures for LiNKaios (VPS, Supabase, n8n)"
+alwaysApply: false
+---
+
+# Release & Deployment
+
+## Deployment Targets
+
+LiNKaios deploys to self-hosted infrastructure, not Vercel or cloud PaaS.
+
+| Component | Target | Method |
+|-----------|--------|--------|
+| Control plane | Debian VPS | Docker Compose |
+| Reverse proxy | DigitalOcean droplet | Caddy |
+| Automation (n8n) | Debian VPS | Docker Compose |
+| Database | Supabase (hosted) | Migrations |
+| Execution node | Mac Mini | Local services |
+
+## Pre-Flight Checklist
+
+Before any deployment:
+
+- [ ] All changes merged to `main` via `staging` (SOP v2)
+- [ ] `pnpm typecheck` passes
+- [ ] `pnpm test` passes
+- [ ] `pnpm lint` passes
+- [ ] `pnpm build` succeeds
+- [ ] Supabase migrations linted; rollback notes present
+- [ ] `.env.example` aligned with required variables
+- [ ] No secrets in code
+- [ ] Acceptance harness passes (`scripts/mvo-predeploy-acceptance.sh`)
+
+## Deployment Steps
+
+### Control Plane (VPS)
+
+1. SSH to VPS or use Tailscale.
+2. Pull latest `main`: `git pull origin main`
+3. Rebuild and restart: `docker compose up -d --build`
+4. Verify health endpoints.
+5. Check logs: `docker compose logs -f LiNKaios`
+
+### Supabase
+
+1. Backup: take a snapshot or export SQL.
+2. Apply migrations: `supabase db push` or run staged migrations.
+3. Verify RLS policies are active.
+4. Test RPC functions.
+5. Rollback: follow migration rollback notes; restore snapshot if needed.
+
+### n8n (LiNKautowork)
+
+1. Import workflow JSON from `apps/LiNKautowork/workflows/`.
+2. Verify credentials in n8n credential store.
+3. Dry run with fixture payloads.
+4. Enable triggers (webhook/cron).
+5. Confirm logging and alerting.
+
+### Caddy (Reverse Proxy)
+
+1. Update Caddyfile in `infra/droplet-admin/control-plane/`.
+2. Push to VPS.
+3. Reload: `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`
+4. Verify TLS and proxy routing.
+
+## Rollback
+
+- Control plane: `docker compose down && git checkout <previous-tag> && docker compose up -d`
+- Supabase: follow migration rollback notes or restore snapshot.
+- n8n: disable workflow or import previous JSON export.
+- Caddy: revert Caddyfile and reload.
+
+## Post-Deploy
+
+- Monitor logs for 30 minutes.
+- Verify NATS transport is healthy.
+- Check Supabase dashboard for query errors.
+- Confirm n8n workflow triggers are firing.

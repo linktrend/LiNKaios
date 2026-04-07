@@ -17,6 +17,7 @@
   },
   "pnpm": {
     "overrides": {
+      "vite": ">=7.3.2",
       "@tootallnate/once": "^3.0.1",
       "path-to-regexp@<0.1.13": "0.1.13",
       "brace-expansion@>=2.0.0 <2.0.3": ">=2.0.3",

@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+
+# LiNKagentzero (link-agent-zero) Foundation
+
+LiNKtrend fork of **Agent Zero**: Python **execution** agent framework with plugins, tools, web UI, and skills compatible with the SKILL.md ecosystem.
+
+## Layout
+
+- `python/` — core runtime and helpers
+- `plugins/` — bundled and custom plugins
+- `docs/` — setup, architecture, developer guides
+- `webui/` — frontend when present
+
+## Role
+
+- Terminal and tool execution plane—do not fold orchestration (Paperclip) or channel gateway (OpenClaw) responsibilities here.

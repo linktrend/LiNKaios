@@ -1,0 +1,9 @@
+---
+description: "Typebot packages and apps"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Database and auth secrets only in env; align deploy docs with LiNKtrend VPS or container standard when applicable.

@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-vaultwarden Foundation
+
+LiNKtrend fork of **Vaultwarden** (lightweight Bitwarden-compatible server, Rust). Follow upstream Docker and env documentation; treat `ADMIN_TOKEN` and DB URLs as secrets only.

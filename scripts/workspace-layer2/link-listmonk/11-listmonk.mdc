@@ -1,0 +1,9 @@
+---
+description: "Listmonk source and static"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Preserve SMTP and DB configuration via env only; align secret names with LiNKtrend GSM convention where integrated.

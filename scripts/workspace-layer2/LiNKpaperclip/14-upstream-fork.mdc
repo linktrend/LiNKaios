@@ -1,0 +1,11 @@
+---
+description: "LiNKtrend fork policy for Paperclip"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Fork policy
+
+- **Never push** to `paperclipai/paperclip` upstream; work on `linktrend/link-paperclip`.
+- Upstream sync lands via fork automation (`staging` → resolve → `main`).
+- Mark LiNKtrend-specific behavior with clear commits and config flags so merges remain traceable.

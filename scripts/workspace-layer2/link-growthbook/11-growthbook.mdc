@@ -1,0 +1,10 @@
+---
+description: "GrowthBook packages and apps"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Keep API keys and database URLs out of git; wire through env at runtime.
+- Document any LiNKtrend-specific deployment overlays in repo docs or `infra/` if present.

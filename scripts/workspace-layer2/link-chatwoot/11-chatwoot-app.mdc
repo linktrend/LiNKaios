@@ -1,0 +1,10 @@
+---
+description: "Chatwoot Rails and app"
+globs: "app/**,config/**,enterprise/**"
+alwaysApply: false
+---
+
+# App changes
+
+- Use Chatwoot’s standard bundle/rspec/rubocop flows; avoid disabling cops without team agreement.
+- Keep secrets in env templates only—GSM at deploy.

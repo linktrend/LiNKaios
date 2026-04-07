@@ -1,0 +1,9 @@
+---
+description: "LiNKtrend fork policy for Plane"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Fork policy
+
+- **Never push** to upstream Plane; use `linktrend/link-plane` and fork sync SOP.

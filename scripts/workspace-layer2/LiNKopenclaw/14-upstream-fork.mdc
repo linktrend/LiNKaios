@@ -1,0 +1,10 @@
+---
+description: "LiNKtrend fork policy for OpenClaw"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Fork policy
+
+- **Never push** to `openclaw/openclaw` upstream; work on `linktrend/link-openclaw`.
+- Sync through fork `staging` per org SOP; preserve LiNKtrend patches in identifiable commits.

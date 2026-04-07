@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-GlitchTip Foundation
+
+LiNKtrend fork of **GlitchTip** (Sentry-compatible error monitoring). Stack is typically Django/Python with frontend assets—follow this repo’s documented dev and deploy paths.

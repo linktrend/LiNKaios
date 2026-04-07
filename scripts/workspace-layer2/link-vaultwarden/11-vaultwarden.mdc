@@ -1,0 +1,10 @@
+---
+description: "Vaultwarden source"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Security-sensitive settings belong in deployment env or GSM-backed injection, not in git.
+- Prefer upstream-compatible config keys so fork merges remain feasible.

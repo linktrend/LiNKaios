@@ -1,0 +1,73 @@
+---
+alwaysApply: true
+---
+
+# LiNKaios Foundation
+
+## What This Repo Is
+
+LiNKaios is the AI Operating System (AIOS) control plane for the LiNKtrend Venture Factory. It coordinates how missions are created, decomposed, assigned, approved, and completed across all agents, while enforcing identity, permissions, tenant boundaries, and policy guardrails.
+
+Canonical spec: `docs/AIOS_MASTER_SPEC.md`
+
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Monorepo | Turborepo + pnpm |
+| Language (orchestration) | TypeScript / Node.js |
+| Language (workers) | Python (uv-managed) |
+| Memory plane | Supabase (Postgres + pgvector) |
+| Inter-agent transport | NATS (JetStream) |
+| Automation | n8n (LiNKautowork) |
+| Orchestration | Paperclip |
+| Management agents | OpenClaw |
+| Execution agents | Agent Zero |
+| Embedding model | nomic-embed-text (768 dims) via Ollama on Mac Mini |
+
+## Workspace Layout
+
+```
+apps/
+  LiNKaios/          # Control plane web UI (Next.js App Router)
+  LiNKautowork/      # n8n workflow assets and automation configs
+packages/
+  linkbrain/          # LiNKbrain SQL schemas, RPC layer, memory utilities
+  linklogic/          # Shared logic and contract types
+  linkskills/         # Skill module interfaces and registry
+linkbots/
+  internal/           # Manager and worker persona runtime skeletons
+applets/
+  link-paperclip/     # Orchestration core (git submodule → link-paperclip)
+  link-openclaw/      # Manager agent framework (git submodule → link-openclaw)
+  link-agent-zero/    # Worker agent framework (git submodule → link-agent-zero)
+  link-llm-council/   # LLM Council / Board of Advisors (git submodule → link-llm-council)
+infra/
+  debian-vps/         # VPS Docker Compose, bootstrap, deploy scripts
+  droplet-admin/      # DigitalOcean droplet with Caddy reverse proxy
+  mac-mini/           # Mac Mini config (Ollama, execution node)
+docs/                 # Cross-thread product and engineering specs
+scripts/              # Bootstrap, validation, acceptance harness scripts
+```
+
+## Package Manager
+
+- **pnpm** with workspaces.
+- Add workspace-level deps with `pnpm add <dep> -w`.
+- Add app/package-specific deps with `pnpm add <dep> -F <filter>`.
+- Keep `package.json` scripts as the primary orchestration interface.
+
+## Architecture Separation
+
+LiNKaios coordinates multiple planes without collapsing their boundaries:
+
+| Plane | System | Boundary |
+|-------|--------|----------|
+| Orchestration | Paperclip | Scheduling, hierarchy, heartbeat |
+| Management | OpenClaw | Planning, governance, delegation |
+| Execution | Agent Zero | Code, CLI, terminal operations |
+| Logic | LiNKskills | Reusable governed skill modules |
+| Memory | LiNKbrain | Persistent state, audit, retrieval |
+| Automation | LiNKautowork | Deterministic workflow execution |
+
+Do not write code that collapses these boundaries. Each plane has its own responsibility. Scheduling logic stays in orchestration. Planning logic stays in management. Implementation stays in execution.

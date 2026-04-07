@@ -56,8 +56,8 @@ Extended stack with upstream services:
 
 ## 7) Agent readiness
 
-- Manager personas exist under `agents/internal/managers/*` including Team Lead MARK
-- Worker runtimes initialized with `uv sync` under `agents/internal/workers` including UI/UX ALEX
+- Manager personas exist under `linkbots/internal/managers/*` including Team Lead MARK
+- Worker runtimes initialized with `uv sync` under `linkbots/internal/workers` including UI/UX ALEX
 - Tenant IDs in `IDENTITY.md` match Paperclip mission tenant
 - Worker and manager `AGENTS.md`, `soul.md`, and `memory.md` are present and role-specific
 - Worker runtime env includes `AIOS_API_URL`, `AIOS_INGRESS_TOKEN`, and mission context (`mission_id`) for `/skills/execute`

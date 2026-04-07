@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+
+# LiNKpaperclip (link-paperclip) Foundation
+
+LiNKtrend fork of **Paperclip**: Node.js orchestration server + React UI for agent teams, goals, budgets, and governance. This repo is the **standalone fork**; LiNKaios may also pin it as a submodule under `applets/link-paperclip`.
+
+## Layout (typical)
+
+- `server/` — Node API, NATS/JetStream, GSM providers
+- `ui/` — React dashboard
+- `doc/` — upstream-oriented docs and assets
+
+## Role in AIOS
+
+- Scheduling and org orchestration plane; keep boundaries vs OpenClaw (management) and Agent Zero (execution).

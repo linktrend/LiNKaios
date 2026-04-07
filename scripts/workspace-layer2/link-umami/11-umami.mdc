@@ -1,0 +1,9 @@
+---
+description: "Umami application"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- `DATABASE_URL` and hash salt only via env; never commit production analytics credentials.
