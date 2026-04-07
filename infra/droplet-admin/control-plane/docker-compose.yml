@@ -2,6 +2,8 @@ services:
   reverse-proxy:
     image: caddy:2.8-alpine
     restart: unless-stopped
+    env_file:
+      - .env.runtime
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -32,6 +34,9 @@ services:
     environment:
       PAPERCLIP_DEPLOYMENT_MODE: authenticated
       PAPERCLIP_DEPLOYMENT_EXPOSURE: private
+      PAPERCLIP_HOME: /paperclip
+    volumes:
+      - paperclip_data:/paperclip
     networks: [controlplane]
 
   linkaios:
@@ -41,6 +46,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env.runtime
+    volumes:
+      # Service account JSON for GSM (create on droplet: /opt/linktrend/secrets/gcp-sa.json)
+      - /opt/linktrend/secrets/gcp-sa.json:/var/secrets/google/linktrend-gsm.json:ro
     networks: [controlplane]
 
 networks:
@@ -50,3 +58,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  paperclip_data:
