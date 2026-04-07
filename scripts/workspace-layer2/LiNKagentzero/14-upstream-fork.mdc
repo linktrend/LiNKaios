@@ -1,0 +1,10 @@
+---
+description: "LiNKtrend fork policy for Agent Zero"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Fork policy
+
+- **Never push** to upstream Agent Zero; work on `linktrend/link-agent-zero`.
+- Sync via fork automation; keep customizations in clear commits.

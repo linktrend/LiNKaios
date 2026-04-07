@@ -1,0 +1,10 @@
+---
+description: "Agency agents integrations"
+globs: "integrations/**,examples/**"
+alwaysApply: false
+---
+
+# Integration edits
+
+- Keep per-IDE instructions self-contained; cross-link shared concepts once.
+- Do not embed secrets or personal tokens in any sample.

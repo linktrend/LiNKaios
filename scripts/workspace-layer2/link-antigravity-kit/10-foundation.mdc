@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+# link-antigravity-kit Foundation
+
+Distribution of **AI agent templates**: skills, agent personas, and workflows for Antigravity / IDE consumption. Source content is markdown and structured folders—not a production runtime service.
+
+## Layout
+
+- Skills, agents, workflows as defined in repo README
+- Keep examples copy-paste safe; no secrets or real tenant IDs in samples

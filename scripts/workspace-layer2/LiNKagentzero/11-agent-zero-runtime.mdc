@@ -1,0 +1,10 @@
+---
+description: "Agent Zero Python runtime and plugins"
+globs: "python/**,plugins/**"
+alwaysApply: false
+---
+
+# Runtime & plugins
+
+- Follow `docs/setup/installation.md` and `docs/developer/` for extension points.
+- LiNKtrend audit helpers (e.g. `helpers/linktrend_audit.py`) should stay isolated behind stable interfaces.

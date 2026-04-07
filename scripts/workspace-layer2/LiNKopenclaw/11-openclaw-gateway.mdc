@@ -1,0 +1,10 @@
+---
+description: "OpenClaw gateway, agents, and extensions"
+globs: "src/**,extensions/**,apps/**"
+alwaysApply: false
+---
+
+# OpenClaw implementation
+
+- Channel and tool policy changes touch many files—run upstream test/lint targets before PRs.
+- AIOS integration consumers may use `pnpm aios:nats:consumer` and related scripts—document env in `.env.example`.

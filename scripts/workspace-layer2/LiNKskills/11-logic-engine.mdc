@@ -1,0 +1,12 @@
+---
+description: "LiNKskills Logic Engine service, registry, and API"
+globs: "services/logic-engine/**"
+alwaysApply: false
+---
+
+# Logic Engine
+
+- Build catalog: `python3 services/logic-engine/scripts/build_registry.py` with repo-root and packages config as documented in README.
+- Run API: `python3 services/logic-engine/scripts/run_api.py` (port via env as in unified runbook).
+- Retention: `run_retention_worker.py` when touching lifecycle policies.
+- Keep generated outputs under `services/logic-engine/generated/` consistent with scripts; prefer regenerating over hand-editing JSON catalogs.

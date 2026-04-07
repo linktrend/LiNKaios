@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+# link-agency-agents Foundation
+
+**Agency-style agent definitions** and **IDE integration** packs (Cursor, Claude Code, Copilot, OpenClaw, etc.). Markdown-first; each integration folder documents how agents/skills are loaded.
+
+## Layout
+
+- `integrations/<tool>/` — tool-specific instructions and assets
+- `examples/` — reference setups

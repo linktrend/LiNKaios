@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+# link-plane Foundation
+
+LiNKtrend fork of **Plane** — large TypeScript monorepo (apps, packages, API, deployments). Treat pnpm/turbo (or repo-standard) scripts as source of truth for build and test.
+
+## Scope
+
+- Prefer scoped changes under one app or package per PR when possible; respect upstream architectural seams.

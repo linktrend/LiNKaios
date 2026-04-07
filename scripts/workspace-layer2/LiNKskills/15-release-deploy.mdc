@@ -1,0 +1,11 @@
+---
+description: "LiNKskills validation and release checks"
+alwaysApply: false
+---
+
+# Release & quality gates
+
+- `python3 validator.py --repo-root . --scan-all`
+- `bash scripts/ci-check-frontmatter.sh`
+- `python3 scripts/check-service-ownership.py`
+- Align changes with `docs/BRANCHING_AND_DEPLOYMENT_POLICY.md` (SOP v2: dev → staging → main).

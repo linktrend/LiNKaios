@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+# link-awesome-openclaw-skills Foundation
+
+Curated **OpenClaw-oriented skills** list and companion content for LiNKtrend. Maintenance is documentation-heavy; changes should preserve upstream attribution and license notes per repo guidelines.
+
+## Conventions
+
+- Add skills with clear scope, triggers, and safety notes.
+- Link to canonical OpenClaw docs where behavior is version-sensitive.

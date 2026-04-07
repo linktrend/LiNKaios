@@ -20,15 +20,15 @@ Run one integrated dev topology with canonical `aios.*` transport, strict LiNKsk
 - link-antigravity-kit: `/Users/linktrend/Projects/link-antigravity-kit` (canonical folder name for `github.com/linktrend/link-antigravity-kit`)
 - link-awesome-openclaw-skills: `/Users/linktrend/Projects/link-awesome-openclaw-skills` (`github.com/linktrend/link-awesome-openclaw-skills`)
 
-### One-shot: clone missing active repos + Layer 1 skills + Layer 2 stub
+### One-shot: full clones + Layer 1 skills + curated Layer 2
 
-From LiNKaios, with `linktrend-skills` cloned alongside other repos (same parent directory as this monorepo):
+From LiNKaios, with `linktrend-skills` in the same parent folder as other repos:
 
 ```bash
 ./scripts/bootstrap-linktrend-workspace-repos.sh
 ```
 
-This clones `link-llm-council`, `link-plane`, `link-zulip`, `link-chatwoot`, and `link-agency-agents` when absent, runs `linktrend-skills/install.sh` on each core sibling, and adds `10-foundation.mdc` only if missing. LiNKaios itself is left unchanged (it already has full Layer 2). Replace stubs using `linktrend-skills/CUSTOMIZE_LAYER2.md`.
+This **fully clones** (no `--depth`) any listed `link-*` repo that is missing, **unshallows** shallow repos so local history matches the remote, runs `linktrend-skills/install.sh` on **every** sibling git repo except `Archive/`, `Dev-Server/`, `LiNKsmartfile/`, and `LiNKaios`, then copies **curated Layer 2** rules from `scripts/workspace-layer2/<repo>/` into each repo’s `.cursor/rules/`. `linktrend-skills` itself is included when present. LiNKaios is left unchanged.
 
 ## Preconditions
 
