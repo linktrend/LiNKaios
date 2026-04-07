@@ -16,6 +16,8 @@ jobs:
           node-version: '20'
       - uses: pnpm/action-setup@v4
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @linktrend/linklogic build
+      - run: pnpm --filter @linktrend/linkskills build
       - run: pnpm --filter @linktrend/LiNKaios check
       - run: pnpm --filter @linktrend/LiNKaios test
       - uses: returntocorp/semgrep-action@v1
