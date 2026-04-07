@@ -28,7 +28,7 @@ From LiNKaios, with `linktrend-skills` in the same parent folder as other repos:
 ./scripts/bootstrap-linktrend-workspace-repos.sh
 ```
 
-This **fully clones** (no `--depth`) any listed `link-*` repo that is missing, **unshallows** shallow repos so local history matches the remote, runs `linktrend-skills/install.sh` on **every** sibling git repo except `Archive/`, `Dev-Server/`, `LiNKsmartfile/`, and `LiNKaios`, then copies **curated Layer 2** rules from `scripts/workspace-layer2/<repo>/` into each repo’s `.cursor/rules/`. `linktrend-skills` itself is included when present. LiNKaios is left unchanged.
+This **fully clones** (no `--depth`) any listed `link-*` repo that is missing (including infra/product forks such as `link-metabase`, `link-odoo`, `link-vaultwarden`, `link-umami`, `link-typebot.io`, `link-GlitchTip`, and the rest in `DEFAULT_CLONES` inside the script), **unshallows** shallow repos so local history matches the remote, runs `linktrend-skills/install.sh` on **every** sibling git repo except `Archive/`, `Dev-Server/`, `LiNKsmartfile/`, and `LiNKaios`, then copies **curated Layer 2** rules from `scripts/workspace-layer2/<repo>/` into each repo’s `.cursor/rules/`. `linktrend-skills` itself is included when present. LiNKaios is left unchanged.
 
 ## Preconditions
 

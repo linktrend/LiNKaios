@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-paperless-ngx Foundation
+
+LiNKtrend fork of **Paperless-ngx** (document management). Django backend and Angular (or documented) frontend—use project Docker and dev setup guides.

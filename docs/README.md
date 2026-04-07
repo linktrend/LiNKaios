@@ -13,6 +13,7 @@ Last updated: 2026-04-01
 - [Unified Dev Test Runbook](./UNIFIED_DEV_TEST_RUNBOOK.md)
 - [Release Gate Checklist](./RELEASE_GATE_CHECKLIST.md)
 - [Secret Management](./SECRET_MANAGEMENT.md)
+- [Agent orchestration & GSM access](./AGENT_ORCHESTRATION_AND_SECRETS.md)
 
 ## Rule
 If behavior changes, docs must be updated in the same PR.

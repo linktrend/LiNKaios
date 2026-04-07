@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-odoo Foundation
+
+LiNKtrend fork of **Odoo** (ERP / business apps). Python-heavy with addons; follow Odoo’s module, ORM, and security (access rules) patterns for any customizations.

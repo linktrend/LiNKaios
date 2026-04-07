@@ -1,0 +1,10 @@
+---
+description: "GlitchTip application code"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Run project tests/migrations per upstream README before large changes.
+- Production config uses GSM-backed secrets at deploy time, not committed `.env` values.

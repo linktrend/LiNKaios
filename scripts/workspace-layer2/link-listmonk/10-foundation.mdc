@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-listmonk Foundation
+
+LiNKtrend fork of **Listmonk** (self-hosted mailing lists / campaigns). Typically Go backend with admin UI; follow upstream Makefile and build docs.

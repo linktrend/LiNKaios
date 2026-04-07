@@ -50,6 +50,18 @@ DEFAULT_CLONES=(
   "link-zulip|https://github.com/linktrend/link-zulip.git"
   "link-chatwoot|https://github.com/linktrend/link-chatwoot.git"
   "link-agency-agents|https://github.com/linktrend/link-agency-agents.git"
+  "link-account-financial-tools|https://github.com/linktrend/link-account-financial-tools.git"
+  "link-GlitchTip|https://github.com/linktrend/link-GlitchTip.git"
+  "link-growthbook|https://github.com/linktrend/link-growthbook.git"
+  "link-listmonk|https://github.com/linktrend/link-listmonk.git"
+  "link-metabase|https://github.com/linktrend/link-metabase.git"
+  "link-odoo|https://github.com/linktrend/link-odoo.git"
+  "link-paperless-ngx|https://github.com/linktrend/link-paperless-ngx.git"
+  "link-postiz-app|https://github.com/linktrend/link-postiz-app.git"
+  "link-serpbear|https://github.com/linktrend/link-serpbear.git"
+  "link-typebot.io|https://github.com/linktrend/link-typebot.io.git"
+  "link-umami|https://github.com/linktrend/link-umami.git"
+  "link-vaultwarden|https://github.com/linktrend/link-vaultwarden.git"
 )
 
 echo "=== LiNKtrend workspace bootstrap ==="

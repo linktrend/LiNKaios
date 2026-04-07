@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-growthbook Foundation
+
+LiNKtrend fork of **GrowthBook** (feature flags and experimentation). Usually a TypeScript/Node monorepo; use upstream package scripts for build, test, and lint.
