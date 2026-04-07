@@ -1,0 +1,10 @@
+---
+description: "Paperclip server and UI"
+globs: "server/**,ui/**"
+alwaysApply: false
+---
+
+# Paperclip code paths
+
+- Prefer pnpm workflows documented upstream; preserve LiNKtrend GSM and operator profile customizations in `server/` config trees.
+- UI changes should keep parity with API contracts and NATS bootstrap scripts under `server/`.

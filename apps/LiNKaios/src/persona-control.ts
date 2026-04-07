@@ -7,6 +7,8 @@ import { parseIdentityMetadata, sha256Hex } from "@linktrend/linklogic";
 import type { AiosEventEnvelope } from "@linktrend/linkskills";
 import { buildPersonaV1Layers } from "./persona-v1.js";
 import {
+  INTERNAL_MANAGERS_DIR,
+  INTERNAL_WORKERS_DIR,
   discoverInternalAgents,
   evaluateOperationalCertificationFromRoster,
   type AgentLane
@@ -246,9 +248,10 @@ function resolveIdentityPathByLane(lane: AgentLane, dprId: string): string {
     throw new Error(`Unknown agent for lane ${lane}: ${dprId}`);
   }
 
-  const base = lane === "manager"
-    ? join(process.cwd(), "agents", "internal", "managers", dprId)
-    : join(process.cwd(), "agents", "internal", "workers", dprId);
+  const base =
+    lane === "manager"
+      ? join(INTERNAL_MANAGERS_DIR, dprId)
+      : join(INTERNAL_WORKERS_DIR, dprId);
 
   return join(base, "IDENTITY.md");
 }

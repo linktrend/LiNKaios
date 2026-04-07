@@ -1,0 +1,10 @@
+---
+description: "Zulip server and web"
+globs: "zerver/**,web/**,static/**"
+alwaysApply: false
+---
+
+# Implementation scope
+
+- Prefer minimal diffs aligned with upstream patterns; run Zulip’s test/lint targets for touched areas.
+- Large refactors should be justified in commit messages for fork maintainers.

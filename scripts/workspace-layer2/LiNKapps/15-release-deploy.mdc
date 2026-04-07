@@ -1,0 +1,9 @@
+---
+description: "LiNKapps deployment (Vercel / EAS)"
+alwaysApply: false
+---
+
+# Release
+
+- Web: Vercel (or org standard) per README; mobile: EAS builds.
+- Run lint/typecheck/test from monorepo root before release; keep `.env.example` current.

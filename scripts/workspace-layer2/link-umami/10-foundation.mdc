@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-umami Foundation
+
+LiNKtrend fork of **Umami** (privacy-focused web analytics). Node/Next stack per upstream; use documented database and build steps.

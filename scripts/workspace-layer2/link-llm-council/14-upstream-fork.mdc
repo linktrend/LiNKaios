@@ -1,0 +1,10 @@
+---
+description: "LiNKtrend fork policy for LLM Council"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Fork policy
+
+- Work on `linktrend/link-llm-council`; never push to original upstream.
+- Use fork branch promotion (`staging` → `main`) per org automation.

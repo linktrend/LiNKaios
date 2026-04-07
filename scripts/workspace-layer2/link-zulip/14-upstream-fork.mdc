@@ -1,0 +1,9 @@
+---
+description: "LiNKtrend fork policy for Zulip"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Fork policy
+
+- **Never push** to upstream Zulip; use `linktrend/link-zulip` and automated sync flows.

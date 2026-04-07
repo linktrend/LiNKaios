@@ -1,0 +1,33 @@
+---
+description: "Rules for LiNKtrend fork submodules under applets/"
+globs: "applets/**"
+---
+
+# Upstream Fork Management
+
+## Scope
+
+Applies to git submodule checkouts under `applets/**` (LiNKtrend forks of Paperclip, OpenClaw, Agent Zero, LLM Council).
+
+## Submodule Layout
+
+| Path | GitHub fork | Purpose |
+|------|-------------|---------|
+| `applets/link-paperclip/` | link-paperclip | Orchestration core |
+| `applets/link-openclaw/` | link-openclaw | Manager agent framework |
+| `applets/link-agent-zero/` | link-agent-zero | Worker agent framework |
+| `applets/link-llm-council/` | link-llm-council | LLM Council / Board of Advisors |
+
+Initialize with: `git submodule update --init --recursive` (see `scripts/bootstrap-upstreams.sh`).
+
+## Rules
+
+1. **LiNKaios tracks SHAs only.** This monorepo records which commit of each fork is pinned. Day-to-day fork development happens in the fork repositories (or in a detached submodule checkout), then you bump the submodule pointer here when integrating.
+
+2. **Never push upstream.** Changes stay in our forks. The original upstream projects are never modified by LiNKtrend.
+
+3. **Upstream sync is automated.** GitHub automation syncs upstream updates into each fork's `staging` branch. Conflict resolution happens in `staging` following SOP v2, then promoted to `main`.
+
+4. **Separate customizations clearly.** When modifying forked code, keep LiNKtrend-specific changes identifiable (clear commit messages, config flags, or wrapper patterns) so upstream syncs don't silently overwrite them.
+
+5. **Respect upstream architecture.** Paperclip handles scheduling, OpenClaw handles management reasoning, Agent Zero handles terminal execution. Don't collapse these responsibilities.

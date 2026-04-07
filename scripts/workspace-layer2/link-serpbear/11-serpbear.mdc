@@ -1,0 +1,9 @@
+---
+description: "SerpBear codebase"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Search provider API keys via env / GSM only; no keys in tracked config samples.

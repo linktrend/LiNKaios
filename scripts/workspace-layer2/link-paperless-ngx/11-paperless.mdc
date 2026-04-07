@@ -1,0 +1,10 @@
+---
+description: "Paperless-ngx application"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- OCR and storage paths are environment-specific; keep samples in `.env.example` only.
+- Migrations and consumer scripts should stay compatible with upstream upgrade paths.

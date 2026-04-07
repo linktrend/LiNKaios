@@ -1,0 +1,10 @@
+---
+description: "LLM Council backend and frontend"
+globs: "backend/**,frontend/**"
+alwaysApply: false
+---
+
+# Stack notes
+
+- Keep API contracts stable for LiNKaios `linkboard` client; version breaking changes need coordinated bumps.
+- Frontend env vars must remain placeholder-only in repo; secrets via GSM at deploy time.

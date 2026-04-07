@@ -1,0 +1,10 @@
+---
+description: "Skills catalog and docs"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Catalog edits
+
+- Keep index/readme entries sorted or grouped consistently with existing structure.
+- Avoid duplicating full upstream skill bodies—prefer links + short summaries.

@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-account-financial-tools Foundation
+
+LiNKtrend fork of **account / financial tooling** for venture operations. Follow upstream’s language and build conventions; keep LiNKtrend-specific integrations (GSM, audit, tenant boundaries) in thin config or adapter layers where possible.

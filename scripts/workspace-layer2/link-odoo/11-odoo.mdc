@@ -1,0 +1,10 @@
+---
+description: "Odoo addons and core"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Conventions
+
+- Custom modules should live in clearly named addons paths; never commit `odoo.conf` with real passwords.
+- Prefer upgrading via fork sync process rather than drifting from upstream merge strategy.

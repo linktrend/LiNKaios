@@ -1,0 +1,49 @@
+---
+description: "Infrastructure: Docker, VPS, DigitalOcean droplet, Mac Mini, Caddy"
+globs: "infra/**"
+---
+
+# Infrastructure
+
+## Scope
+
+Applies to files in `infra/**`.
+
+## Environments
+
+| Target | Purpose | Location |
+|--------|---------|----------|
+| `infra/debian-vps/` | Main orchestration server (Docker Compose) | Debian 12 VPS |
+| `infra/droplet-admin/` | DigitalOcean droplet with Caddy reverse proxy | DigitalOcean |
+| `infra/mac-mini/` | Execution node: Ollama, Agent Zero runtimes | Local Mac Mini |
+
+## Docker Compose Services (debian-vps)
+
+- **LiNKaios** — Control plane (Node.js, port 4000)
+- **LiNKautowork** — n8n automation engine (port 5678)
+- **nats** — JetStream message bus (ports 4222, 8222)
+- **agent-zero** — Worker agent (upstream profile, port 50001)
+- **paperclip-upstream** — Orchestration core (upstream profile, port 3100)
+- **openclaw-gateway** — Manager agent gateway (upstream profile, port 4141)
+- **linkboard** — LLM Council (upstream profile, port 3200)
+
+## Security Baseline
+
+- UFW enabled with least-privilege ports.
+- Tailscale for private service-to-service links.
+- No ports exposed publicly unless through Caddy reverse proxy with TLS.
+- Secrets loaded from GSM (Google Secret Manager), not hardcoded.
+
+## Caddy (droplet-admin)
+
+- Reverse proxy with automatic TLS termination.
+- Supabase-authenticated operator gateway pattern.
+- Config in `infra/droplet-admin/control-plane/Caddyfile`.
+
+## Rules
+
+- Never hardcode secrets in Docker Compose files, Caddyfiles, or scripts.
+- Use `${ENV_VAR}` references and `.env` files (which are gitignored).
+- When modifying Docker Compose, preserve the upstream profile separation.
+- When modifying Caddy config, test TLS and proxy behavior before deploying.
+- Bootstrap and deploy scripts must be idempotent (safe to re-run).

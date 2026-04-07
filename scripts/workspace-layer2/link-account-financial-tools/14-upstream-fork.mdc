@@ -1,0 +1,9 @@
+---
+description: "LiNKtrend fork policy"
+globs: "**/*"
+alwaysApply: false
+---
+
+# Fork policy
+
+- Do not push to upstream; work on `linktrend/link-account-financial-tools`. Sync via fork `staging` / automation per org SOP.

@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+---
+
+# LiNKskills Foundation
+
+LiNKskills is LiNKtrend’s governed skill-and-tool layer and hosts the **Logic Engine** (PRD v4.0 MVO). Python services, validators, and registries implement tenant-safe execution contracts for the venture studio.
+
+## Layout (high level)
+
+- `services/logic-engine/` — API, registry, retention worker, generated catalog
+- `validator.py` — repo-wide validation entry
+- `scripts/` — CI helpers, ownership checks, frontmatter gates
+- `tools/gws`, `tools/ltr` — Google / local CLI operating model
+- `configs/service_ownership.json` — service ownership source of truth
+- `docs/` — SOPs, governance, operator briefings
+
+## Stack
+
+- Python 3 for Logic Engine, validators, scripts
+- Contract and catalog JSON under `services/logic-engine/`
+
+## Conventions
+
+- Follow existing PRD/SOP documents in repo root; do not replace “original” SOP files with edits—use updated `*_MVO_CLASS_A.md` variants where applicable.
+- Run `python3 validator.py --repo-root . --scan-all` before large merges.
+- Secrets: `LSL_MASTER_KEY` and GSM patterns per Layer 1; never commit keys.

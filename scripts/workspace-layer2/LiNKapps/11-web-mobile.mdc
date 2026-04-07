@@ -1,0 +1,11 @@
+---
+description: "LiNKapps apps and shared packages"
+globs: "apps/**,packages/**,mcp/**"
+alwaysApply: false
+---
+
+# Web & mobile conventions
+
+- Keep shared UI and tokens in `packages/ui` and design docs; avoid duplicating components across apps.
+- MCP servers under `mcp/` stay thin adapters—no secrets in repo; use env placeholders.
+- Follow `docs/00_OPERATOR_LIBRARY/` for PRD-to-repo handover when building new ventures.

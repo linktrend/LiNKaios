@@ -1,0 +1,20 @@
+---
+alwaysApply: true
+---
+
+# LiNKapps Foundation
+
+LiNKapps (starter / dev kit monorepo) is LiNKtrend’s **web + mobile** application template: Next.js (App Router), Expo/React Native, shared UI package, Supabase, Stripe, and optional MCP servers for IDE integration.
+
+## Layout
+
+- `apps/web/` — Next.js
+- `apps/mobile/` — Expo
+- `packages/ui`, `packages/config`, `packages/utils` — shared code
+- `mcp/` — MCP server projects (Supabase, Stripe, Figma, shadcn)
+- `docs/00_OPERATOR_LIBRARY/` — operator-facing workflow
+
+## Stack
+
+- TypeScript strict, pnpm workspaces, Tailwind + shadcn patterns on web
+- Supabase for auth/data; Stripe for billing per docs

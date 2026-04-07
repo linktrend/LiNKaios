@@ -1,0 +1,10 @@
+---
+description: "Antigravity kit content trees"
+globs: "**/*.md,**/*.mdc"
+alwaysApply: false
+---
+
+# Content rules
+
+- Prefer small, composable skills; cross-link to LiNKtrend Layer 1 identity and SOP where relevant.
+- Workflow markdown should list prerequisites and exit criteria for the Chairman-friendly operator path.

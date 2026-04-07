@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# link-metabase Foundation
+
+LiNKtrend fork of **Metabase** (open-source BI / analytics). Large JVM/Clojure/JavaScript codebase—use upstream developer docs for build, tests, and contribution norms.
