@@ -22,13 +22,14 @@ Secret management: `docs/SECRET_MANAGEMENT.md`
 - `infra/`: Debian VPS and Mac mini operational configs
 - `packages/`: shared platform packages (LiNKbrain SQL, linkskills, linklogic)
 - `apps/`: service applications (Paperclip adapter, n8n workflow assets)
-- `agents/`: manager and worker personas/runtime skeletons
+- `linkbots/`: manager and worker personas/runtime skeletons (`internal/`)
+- `applets/`: git submodules for LiNKtrend forks (Paperclip, OpenClaw, Agent Zero, LLM Council)
 
 ## Quick start
 
 1. Install dependencies:
    - `pnpm install`
-2. Clone required upstreams:
+2. Initialize fork submodules:
    - `./scripts/bootstrap-upstreams.sh`
 3. Configure environment:
    - `cp .env.example .env` and fill non-secret values plus `*_SECRET_NAME` references

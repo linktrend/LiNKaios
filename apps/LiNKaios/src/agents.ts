@@ -91,7 +91,7 @@ const INITIAL_WORKER_IDS = [
 function findWorkspaceRootFrom(startPath: string): string | null {
   let current = startPath;
   while (true) {
-    const candidate = join(current, "agents", "internal");
+    const candidate = join(current, "linkbots", "internal");
     if (existsSync(candidate)) {
       return current;
     }
@@ -116,12 +116,16 @@ function resolveWorkspaceRoot(): string {
     return byModulePath;
   }
 
-  throw new Error("Unable to resolve LiNKaios workspace root containing agents/internal");
+  throw new Error("Unable to resolve LiNKaios workspace root containing linkbots/internal");
 }
 
 const WORKSPACE_ROOT = resolveWorkspaceRoot();
-const INTERNAL_MANAGERS_DIR = join(WORKSPACE_ROOT, "agents", "internal", "managers");
-const INTERNAL_WORKERS_DIR = join(WORKSPACE_ROOT, "agents", "internal", "workers");
+
+/** Absolute path to `linkbots/internal/managers` under the LiNKaios workspace root. */
+export const INTERNAL_MANAGERS_DIR = join(WORKSPACE_ROOT, "linkbots", "internal", "managers");
+
+/** Absolute path to `linkbots/internal/workers` under the LiNKaios workspace root. */
+export const INTERNAL_WORKERS_DIR = join(WORKSPACE_ROOT, "linkbots", "internal", "workers");
 
 function listDprDirectories(path: string): string[] {
   if (!existsSync(path)) {

@@ -16,8 +16,8 @@ This repository is the LiNKtrend AIOS control-plane monorepo for building and op
   - `packages/linkskills`: payload contracts/schemas.
   - `packages/linklogic`: tenant/DPR checks, identity parsing, checksums, run-id, GSM provider.
   - `packages/linkbrain`: Supabase SQL migrations + RPC model for memory/audit.
-- **Agent personas**: `agents/internal/managers` and `agents/internal/workers` using DPR V3 IDs.
-- **External engines (forked source-of-truth repos)** are cloned into `linkbots/` and intentionally gitignored.
+- **Agent personas**: `linkbots/internal/managers` and `linkbots/internal/workers` using DPR V3 IDs.
+- **External engines (LiNKtrend forks)** are git submodules under `applets/` (see `.gitmodules` and `scripts/bootstrap-upstreams.sh`).
 
 ## 2) Canonical product scope and authority
 
@@ -36,8 +36,8 @@ If a thread conflicts with the master spec, the spec wins unless explicitly supe
 
 - DPR V3 immutable identity format: `[TYPE]-[GRADE]-[YYMMDD]-[UUID_SHORT]-[NAME]`
 - Internal path topology:
-  - `agents/internal/managers/*`
-  - `agents/internal/workers/*`
+  - `linkbots/internal/managers/*`
+  - `linkbots/internal/workers/*`
 - Current internal squad baseline:
   - Managers: LISA (CEO), ERIC (CTO), JOHN (PO)
   - Workers: SARAH (BE), MIKE (FE), KATE (QA)
@@ -73,7 +73,7 @@ Important canonical resources used by code:
 ### 3.4 Strategic subsystem branding
 
 - Strategic council integration is branded **LiNKboard** in app-level naming.
-- Upstream source directory remains `linkbots/llm-council` (explicitly not renamed).
+- LiNKboard upstream checkout: `applets/link-llm-council` (submodule → `link-llm-council`).
 
 ## 4) Current repository structure
 
@@ -96,13 +96,13 @@ linktrend-aios/
 ├── apps/
 │   ├── LiNKaios/
 │   └── LiNKautowork/
-├── agents/
-│   └── internal/
 ├── linkbots/
-│   ├── paperclip/
-│   ├── openclaw/
-│   ├── agent-zero/
-│   └── llm-council/
+│   └── internal/
+├── applets/
+│   ├── link-paperclip/
+│   ├── link-openclaw/
+│   ├── link-agent-zero/
+│   └── link-llm-council/
 └── scripts/
 ```
 
@@ -110,8 +110,8 @@ linktrend-aios/
 
 ### 5.1 Upstream and monorepo alignment
 
-- `scripts/bootstrap-upstreams.sh` updated to use LiNKtrend forks for all engines including `link-llm-council`.
-- `linkbots/` kept gitignored by design (deployment must run bootstrap script).
+- `scripts/bootstrap-upstreams.sh` runs `git submodule update --init --recursive` for `applets/link-*` forks.
+- Fork checkouts live under `applets/` as submodules; persona skeletons live under `linkbots/internal/`.
 
 ### 5.2 Security hardening in LiNKaios
 
@@ -131,7 +131,7 @@ linktrend-aios/
 
 - Added strategic synthesis client in LiNKaios (`src/linkboard.ts`).
 - Mission pipeline logs LiNKboard output into audit details when configured.
-- Compose includes optional upstream `linkboard` service mapping to `linkbots/llm-council`.
+- Compose includes optional upstream `linkboard` service mapping to `applets/link-llm-council`.
 
 ### 5.5 Linkbrain RPC contract change (critical)
 

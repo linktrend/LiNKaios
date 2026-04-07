@@ -1,0 +1,12 @@
+[submodule "applets/link-paperclip"]
+	path = applets/link-paperclip
+	url = https://github.com/linktrend/link-paperclip.git
+[submodule "applets/link-openclaw"]
+	path = applets/link-openclaw
+	url = https://github.com/linktrend/link-openclaw.git
+[submodule "applets/link-agent-zero"]
+	path = applets/link-agent-zero
+	url = https://github.com/linktrend/link-agent-zero.git
+[submodule "applets/link-llm-council"]
+	path = applets/link-llm-council
+	url = https://github.com/linktrend/link-llm-council.git

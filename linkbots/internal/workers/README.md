@@ -11,7 +11,7 @@ Each worker folder contains:
 ## Setup
 
 ```bash
-cd agents/internal/workers
+cd linkbots/internal/workers
 uv sync
 ```
 

@@ -16,8 +16,8 @@ services:
       - "4000:4000"
     volumes:
       - ../../:/workspace
-      - ../../agents/internal/managers:/workspace/agents/internal/managers:ro
-      - ../../agents/internal/workers:/workspace/agents/internal/workers:ro
+      - ../../linkbots/internal/managers:/workspace/linkbots/internal/managers:ro
+      - ../../linkbots/internal/workers:/workspace/linkbots/internal/workers:ro
       - ${GOOGLE_APPLICATION_CREDENTIALS_HOST_PATH:-../../secrets/gcp-sa.json}:${GOOGLE_APPLICATION_CREDENTIALS:-/var/secrets/google/linktrend-gsm.json}:ro
     depends_on:
       - LiNKautowork
@@ -50,7 +50,7 @@ services:
   paperclip-upstream:
     image: node:22-alpine
     profiles: ["upstreams"]
-    working_dir: /linkbots/paperclip
+    working_dir: /applets/link-paperclip
     command:
       [
         "sh",
@@ -60,14 +60,14 @@ services:
     env_file:
       - ${AIOS_ENV_FILE:-../../.env}
     volumes:
-      - ../../linkbots/paperclip:/linkbots/paperclip
+      - ../../applets/link-paperclip:/applets/link-paperclip
     ports:
       - "3100:3100"
 
   openclaw-gateway:
     image: node:22-alpine
     profiles: ["upstreams"]
-    working_dir: /linkbots/openclaw
+    working_dir: /applets/link-openclaw
     command:
       [
         "sh",
@@ -77,14 +77,14 @@ services:
     env_file:
       - ${AIOS_ENV_FILE:-../../.env}
     volumes:
-      - ../../linkbots/openclaw:/linkbots/openclaw
+      - ../../applets/link-openclaw:/applets/link-openclaw
     ports:
       - "4141:4141"
 
   linkboard:
     image: node:22-alpine
     profiles: ["upstreams"]
-    working_dir: /linkbots/llm-council
+    working_dir: /applets/link-llm-council
     command:
       [
         "sh",
@@ -94,7 +94,7 @@ services:
     env_file:
       - ${AIOS_ENV_FILE:-../../.env}
     volumes:
-      - ../../linkbots/llm-council:/linkbots/llm-council
+      - ../../applets/link-llm-council:/applets/link-llm-council
     ports:
       - "3200:3200"
 

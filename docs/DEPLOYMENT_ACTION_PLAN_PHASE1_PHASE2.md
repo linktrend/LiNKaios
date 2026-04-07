@@ -14,7 +14,7 @@ What is already in place:
 
 - Turborepo monorepo structure and package split is in place.
 - LiNKaios/LiNKautowork app skeletons are working locally.
-- DPR V3 agent topology under `agents/internal/*` is present.
+- DPR V3 agent topology under `linkbots/internal/*` is present.
 - Canonical GSM naming pattern integrated into code paths.
 - Security improvements applied to mission ingress (auth + tenant/DPR checks + server-side identity resolution).
 - LiNKboard integration points exist in LiNKaios.
@@ -105,7 +105,7 @@ Actions:
 
 1. Validate each `IDENTITY.md` has correct role/department/channels/permissions.
 2. Validate manager and worker `soul.md` + `memory.md` presence.
-3. Validate worker runtime (`uv`) in `agents/internal/workers`.
+3. Validate worker runtime (`uv`) in `linkbots/internal/workers`.
 4. Confirm channels:
    - Slack/webhook flow via n8n
    - Email notifications via Postmark

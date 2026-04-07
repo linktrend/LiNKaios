@@ -25,12 +25,12 @@ required_paths=(
   "apps/LiNKautowork/workflows/security-exception-response.json"
   "apps/LiNKautowork/workflows/promotion-review-governance.json"
   "apps/LiNKautowork/workflows/restore-authorization-governance.json"
-  "agents/internal/managers/INT-MNG-260311-0001-LISA/soul.md"
-  "agents/internal/managers/INT-MNG-260311-0004-MARK/soul.md"
-  "agents/internal/workers/INT-EXE-260311-0005-MIKE/soul.md"
-  "agents/internal/workers/INT-EXE-260311-0005-MIKE/main.py"
-  "agents/internal/workers/INT-EXE-260311-0007-ALEX/soul.md"
-  "agents/internal/workers/INT-EXE-260311-0007-ALEX/main.py"
+  "linkbots/internal/managers/INT-MNG-260311-0001-LISA/soul.md"
+  "linkbots/internal/managers/INT-MNG-260311-0004-MARK/soul.md"
+  "linkbots/internal/workers/INT-EXE-260311-0005-MIKE/soul.md"
+  "linkbots/internal/workers/INT-EXE-260311-0005-MIKE/main.py"
+  "linkbots/internal/workers/INT-EXE-260311-0007-ALEX/soul.md"
+  "linkbots/internal/workers/INT-EXE-260311-0007-ALEX/main.py"
 )
 
 for path in "${required_paths[@]}"; do
