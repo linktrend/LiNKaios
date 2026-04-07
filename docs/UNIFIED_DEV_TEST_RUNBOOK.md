@@ -14,9 +14,21 @@ Run one integrated dev topology with canonical `aios.*` transport, strict LiNKsk
 - LiNKaios: `/Users/linktrend/Projects/LiNKaios`
 - LiNKskills: `/Users/linktrend/Projects/LiNKskills`
 - LiNKautowork: `/Users/linktrend/Projects/LiNKautowork`
-- LiNKpaperclip: `/Users/linktrend/Projects/LiNKpaperclip`
-- LiNKopenclaw: `/Users/linktrend/Projects/LiNKopenclaw`
-- LiNKagentzero: `/Users/linktrend/Projects/LiNKagentzero`
+- LiNKpaperclip: `/Users/linktrend/Projects/LiNKpaperclip` (fork: `link-paperclip`)
+- LiNKopenclaw: `/Users/linktrend/Projects/LiNKopenclaw` (fork: `link-openclaw`)
+- LiNKagentzero: `/Users/linktrend/Projects/LiNKagentzero` (fork: `link-agent-zero`)
+- link-antigravity-kit: `/Users/linktrend/Projects/link-antigravity-kit` (canonical folder name for `github.com/linktrend/link-antigravity-kit`)
+- link-awesome-openclaw-skills: `/Users/linktrend/Projects/link-awesome-openclaw-skills` (`github.com/linktrend/link-awesome-openclaw-skills`)
+
+### One-shot: clone missing active repos + Layer 1 skills + Layer 2 stub
+
+From LiNKaios, with `linktrend-skills` cloned alongside other repos (same parent directory as this monorepo):
+
+```bash
+./scripts/bootstrap-linktrend-workspace-repos.sh
+```
+
+This clones `link-llm-council`, `link-plane`, `link-zulip`, `link-chatwoot`, and `link-agency-agents` when absent, runs `linktrend-skills/install.sh` on each core sibling, and adds `10-foundation.mdc` only if missing. LiNKaios itself is left unchanged (it already has full Layer 2). Replace stubs using `linktrend-skills/CUSTOMIZE_LAYER2.md`.
 
 ## Preconditions
 
